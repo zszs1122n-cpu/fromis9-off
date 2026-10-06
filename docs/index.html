@@ -226,7 +226,7 @@ button { cursor: pointer; }
 /* 덕질 예산 */
 .stat-link { display: block; font: inherit; color: inherit; text-align: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 .stat-link small::after { content: " ›"; color: var(--accent); }
-#waitBox { margin-bottom: 12px; }
+#waitBox, #seeBox { margin-bottom: 12px; }
 .budget { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
 .budget > summary { list-style: none; cursor: pointer; padding: 14px 16px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .budget > summary::-webkit-details-marker { display: none; }
@@ -285,10 +285,11 @@ body { margin: 0; }
       <div class="addon" id="addon"><span>오프 횟수에 넣기</span>
         <label><input type="checkbox" data-count="soundcheck"> 사첵</label>
         <label><input type="checkbox" data-count="minifm"> 미팬</label>
-        <span>안 넣어도 대기 시간에는 더해져요</span></div>
+        <span>안 넣어도 대기·본 시간에는 더해져요</span></div>
     </div>
     <div class="ticket-stub">
       <button type="button" class="stat stat-link" data-act="openWait" aria-controls="waitBox"><small>총 대기 시간<span class="est">추정</span></small><b id="waitSum" class="won">–</b></button>
+      <button type="button" class="stat stat-link" data-act="openSee" aria-controls="seeBox"><small>멤버 본 시간<span class="est">추정</span></small><b id="seeSum" class="won">–</b></button>
       <div class="stat"><small>총 쓴 돈<span class="est">추정</span><button type="button" class="eye" data-act="money"></button></small><b id="spentSum" class="won">–</b></div>
       <div class="stat"><small>평균 만족도</small><b id="rateAvg">–</b></div>
       <div class="stat"><small>최근 오프</small><b id="last" style="font-size:14px">–</b></div>
@@ -304,6 +305,19 @@ body { margin: 0; }
       <div class="cfg" id="cfg-wait" hidden>
         <div class="cfg-grid" id="cfgGrid-wait"></div>
         <div class="actions"><span class="saved" id="cfgSaved-wait" style="margin-right:auto"></span><button type="button" class="btn ghost" data-cfg-reset="wait">처음 기본값으로</button></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="budget" id="seeBox">
+    <summary><b>멤버 본 시간 추정치</b><span class="sum" id="seeBoxSum"></span></summary>
+    <div class="budget-body">
+      <div class="brk" id="seeBrk"></div>
+      <p class="hint">공연·행사 길이로 잡은 추정치예요. 미팬은 2023–24년 20분, 2025년부터 40분으로 계산해요. 일정 제목을 눌러 실제로 본 시간을 적으면 그 일정은 적은 값으로 바뀌어요.</p>
+      <div class="actions"><button type="button" class="btn ghost" data-cfg-btn="see">기본값 바꾸기</button></div>
+      <div class="cfg" id="cfg-see" hidden>
+        <div class="cfg-grid" id="cfgGrid-see"></div>
+        <div class="actions"><span class="saved" id="cfgSaved-see" style="margin-right:auto"></span><button type="button" class="btn ghost" data-cfg-reset="see">처음 기본값으로</button></div>
       </div>
     </div>
   </details>
@@ -359,7 +373,7 @@ body { margin: 0; }
   </section>
 
   <footer class="foot">
-    <span>동그라미를 누르면 1회 추가 · 제목을 누르면 대기 시간·쓴 돈·만족도·메모를 적을 수 있어요 · 음방은 사녹과 본방을 따로 세요 · 사첵·미팬은 기본으로 오프 횟수에서 빼고 대기 시간에만 더해요</span>
+    <span>동그라미를 누르면 1회 추가 · 제목을 누르면 대기 시간·본 시간·쓴 돈·만족도·메모를 적을 수 있어요 · 음방은 사녹과 본방을 따로 세요 · 사첵·미팬은 기본으로 오프 횟수에서 빼고 대기·본 시간에만 더해요</span>
     <button id="toggleHidden">숨긴 일정 보기</button>
   </footer>
 
@@ -387,9 +401,13 @@ body { margin: 0; }
     wait: { concert: 2, overseas: 2, soundcheck: 2.5, fansign: 1, fanmeeting: 2, fanevent: 2, popup: 1, sanok: 4, music: 4, minifm: 1, campus: 3, festival: 3, event: 3, musical: 2, etc: 0 },
     cost: { concert: 250000, overseas: 1000000, soundcheck: 0, fansign: null, fanmeeting: 70000, fanevent: 50000, popup: 50000, sanok: 10000, music: 10000, minifm: 0, campus: 10000, festival: 25000, event: 25000, musical: 150000, etc: 0 },
     album: 50000,
+    // 멤버를 본 시간(분): 공연·행사 길이. 미팬은 연도마다 달라서 SEE_EARLY로 따로
+    see: { concert: 150, overseas: 150, soundcheck: 25, fansign: 90, fanmeeting: 150, fanevent: 120, popup: 20, sanok: 20, music: 10, minifm: 40, campus: 25, festival: 20, event: 20, musical: 150, etc: 0 },
   };
+  // 미팬은 2023–24년엔 20분, 2025년부터 40분
+  const SEE_EARLY = { minifm: ["2025", 20] };
   const COST_NOTE = { sanok: "교통비", music: "교통비", campus: "교통비", festival: "약 2~3만원", event: "약 2~3만원", overseas: "항공·숙소·티켓", soundcheck: "본공연에 포함", popup: "MD 구매", fansign: "직접 적기" };
-  // 본 일정에 딸린 종류(사첵·미팬): 기본으로 오프 횟수에서 빼고 대기 시간·비용에만 더한다. 체크하면 횟수에도 넣음
+  // 본 일정에 딸린 종류(사첵·미팬): 기본으로 오프 횟수에서 빼고 대기·본 시간·비용에만 더한다. 체크하면 횟수에도 넣음
   const ADDON = { soundcheck: "사첵", minifm: "미팬" };
   // 오프 횟수 등급 [최소 횟수, 이름]
   const TIERS = [
@@ -459,7 +477,7 @@ body { margin: 0; }
   let logs = {};        // 체크·메모 기록
   let syncedAt = null;
   let fs = {};          // 날짜 모르는 팬싸 횟수 {y2017 … y2026, unknown, cost, memo}
-  let cfg = {};         // 바꾼 기본값 {wait: {cat: h}, cost: {cat: 원}, album: 원, count: {soundcheck|minifm: true}}
+  let cfg = {};         // 바꾼 기본값 {wait: {cat: h}, see: {cat: 분}, cost: {cat: 원}, album: 원, count: {soundcheck|minifm: true}}
   const counts = (e) => !ADDON[e.c] || !!(cfg.count && cfg.count[e.c]);
   // 사녹·본방은 예전엔 '음악방송' 하나라서, 사녹 기본값을 따로 안 바꿨으면 본방(music)에 바꿔 둔 값을 같이 쓴다
   const CFG_FALLBACK = { sanok: "music" };
@@ -467,6 +485,13 @@ body { margin: 0; }
   const baseDef = (kind, c) => { const f = CFG_FALLBACK[c], t = cfg[kind] || {}; return f && t[f] != null ? t[f] : DEF[kind][c]; };
   const waitDef = (c) => { const v = cfg.wait && cfg.wait[c]; return v != null ? v : baseDef("wait", c) ?? 0; };
   const costDef = (c) => { const v = cfg.cost && cfg.cost[c]; return v != null ? v : baseDef("cost", c) ?? 0; };
+  // 본 시간은 새로 생긴 칸이라 사녹→본방 이어받기를 하지 않는다
+  const seeDef = (c, d) => {
+    const v = cfg.see && cfg.see[c];
+    if (v != null) return v;
+    const early = SEE_EARLY[c];
+    return early && d && d < early[0] ? early[1] : DEF.see[c] ?? 0;
+  };
   const albumPrice = () => cfg.album != null ? cfg.album : DEF.album;
   const FS_KEYS = [...YEARS.map((y) => ["y" + y, y + "년"]), ["unknown", "연도 모름"]];
   const fsOf = (year) => year === "all" ? FS_KEYS.reduce((a, [k]) => a + (Number(fs[k]) || 0), 0) : Number(fs["y" + year]) || 0;
@@ -514,6 +539,12 @@ body { margin: 0; }
     if (!h) return "–";
     return (Math.round(h * 10) / 10) + "시간";
   }
+  function fmtMin(m) {
+    m = Math.round(m);
+    if (!m) return "–";
+    const h = Math.floor(m / 60), r = m % 60;
+    return h ? `${h.toLocaleString("ko-KR")}시간${r ? ` ${r}분` : ""}` : `${r}분`;
+  }
   function fmtWon(w) {
     if (!w) return "0원";
     if (w >= 10000) return (Math.round(w / 1000) / 10).toLocaleString("ko-KR") + "만원";
@@ -538,6 +569,8 @@ body { margin: 0; }
   // 일정에 dw(대기 시간)·dc(비용)가 있으면 종류별 기본값 대신 그 값을 쓴다 (예: 무료 행사)
   const waitDefOf = (e) => e.dw != null ? e.dw : waitDef(e.c);
   const costDefOf = (e) => e.dc != null ? e.dc : costDef(e.c);
+  const seeDefOf = (e) => e.ds != null ? e.ds : seeDef(e.c, e.d);
+  const seeOf = (e) => { const m = logOf(e.id).see; return m != null ? Number(m) : seeDefOf(e); };
   const waitOf = (e) => { const w = logOf(e.id).wait; return w != null ? Number(w) : waitDefOf(e); };
   const costOf = (e) => { const c = logOf(e.id).cost; return c != null ? Number(c) : costDefOf(e); };
 
@@ -642,18 +675,53 @@ body { margin: 0; }
     $("waitBrk").innerHTML = rows.join("");
   }
 
-  // kind: "wait"(대기 시간 추정치 칸) 또는 "cost"(덕질 예산 추정치 칸)
+  // 다녀온 일정의 종류별 멤버 본 시간 내역
+  function renderSee(evs) {
+    const past = evs.filter((e) => isDone(e.id) && !isHidden(e.id) && e.d <= today && (ui.year === "all" || e.d.startsWith(ui.year)));
+    const byCat = {};
+    let total = 0;
+    for (const e of past) {
+      const b = byCat[e.c] || (byCat[e.c] = { n: 0, sum: 0, own: 0 });
+      const m = seeOf(e);
+      b.n++; b.sum += m; total += m;
+      if (logOf(e.id).see != null) b.own++;
+    }
+    const extra = fsOf(ui.year);
+    const fsSee = extra * seeDef("fansign");
+    total += fsSee;
+    $("seeSum").textContent = total ? "약 " + fmtMin(total) : "–";
+    $("seeBoxSum").innerHTML = `${ui.year === "all" ? "전체" : ui.year + "년"} 멤버 본 시간 <strong>${total ? "약 " + fmtMin(total) : "–"}</strong>`;
+    const rows = [];
+    for (const c of Object.keys(CATS)) {
+      const b = byCat[c];
+      if (!b) continue;
+      const early = SEE_EARLY[c];
+      const bits = [early && !(cfg.see && cfg.see[c] != null) ? `기본 ${fmtMin(early[1])} (${+early[0] - 1}년까지) · ${fmtMin(DEF.see[c])} (${early[0]}년부터)` : `기본 ${fmtMin(seeDef(c))}`];
+      if (b.own) bits.push(`직접 적은 ${b.own}회`);
+      rows.push(`<div class="brk-row"><span><i style="background:${catColor(c)}"></i>${CATS[c]} ${b.n}회</span><b>${fmtMin(b.sum)}</b><small>${bits.join(" · ")}</small></div>`);
+    }
+    if (extra) rows.push(`<div class="brk-row"><span><i style="background:${catColor("fansign")}"></i>날짜 모르는 팬싸 ${extra}회</span><b>${fmtMin(fsSee)}</b><small>팬싸 기본 ${fmtMin(seeDef("fansign"))}</small></div>`);
+    rows.push(rows.length
+      ? `<div class="brk-row total"><span>합계 (추정)</span><b>약 ${fmtMin(total)}</b></div>`
+      : `<div class="brk-row"><span>아직 다녀온 오프가 없어요</span><b>–</b></div>`);
+    $("seeBrk").innerHTML = rows.join("");
+  }
+
+  // kind: "wait"(대기 시간), "see"(멤버 본 시간), "cost"(덕질 예산) 추정치 칸
   function renderCfg(kind) {
+    const UNIT = { wait: "대기 (시간)", see: "본 시간 (분)", cost: "비용 (만원)", album: "비용 (만원)" };
     const cell = (k, c, val, def, step, max) =>
-      `<input type="number" min="0" max="${max}" step="${step}" inputmode="decimal" data-cfg="${k}" data-k="${c}" value="${val ?? ""}" placeholder="${def ?? "직접"}" aria-label="${CATS[c] || "앨범"} ${k === "wait" ? "대기 시간(시간)" : "비용(만원)"}">`;
+      `<input type="number" min="0" max="${max}" step="${step}" inputmode="decimal" data-cfg="${k}" data-k="${c}" value="${val ?? ""}" placeholder="${def ?? "직접"}" aria-label="${CATS[c] || "앨범"} ${UNIT[k]}">`;
     const row = ([c, l]) => `<span><i style="background:${catColor(c)}"></i>${l}</span>` + (kind === "wait"
       ? cell("wait", c, cfg.wait && cfg.wait[c], baseDef("wait", c), 0.5, 72)
-      : cell("cost", c, cfg.cost && cfg.cost[c] != null ? toMan(cfg.cost[c]) : null, baseDef("cost", c) == null ? null : toMan(baseDef("cost", c)), 0.1, 10000));
-    $("cfgGrid-" + kind).innerHTML = `<span class="h">종류</span><span class="h">${kind === "wait" ? "대기 (시간)" : "비용 (만원)"}</span>` +
+      : kind === "see"
+        ? cell("see", c, cfg.see && cfg.see[c], SEE_EARLY[c] ? `${SEE_EARLY[c][1]}·${DEF.see[c]}` : DEF.see[c], 5, 1440)
+        : cell("cost", c, cfg.cost && cfg.cost[c] != null ? toMan(cfg.cost[c]) : null, baseDef("cost", c) == null ? null : toMan(baseDef("cost", c)), 0.1, 10000));
+    $("cfgGrid-" + kind).innerHTML = `<span class="h">종류</span><span class="h">${UNIT[kind]}</span>` +
       Object.entries(CATS).map(row).join("") +
       (kind === "cost" ? `<span>💿 앨범 1세트</span>${cell("album", "album", cfg.album != null ? toMan(cfg.album) : null, toMan(DEF.album), 0.1, 10000)}` : "");
   }
-  const CFG_KINDS = ["wait", "cost"];
+  const CFG_KINDS = ["wait", "see", "cost"];
   const renderOpenCfg = () => CFG_KINDS.forEach((k) => { if (!$("cfg-" + k).hidden) renderCfg(k); });
 
   /* ---------- 통계 ---------- */
@@ -676,7 +744,7 @@ body { margin: 0; }
     const catKeys = Object.keys(CATS).filter((c) => byCat[c]);
     $("cats").innerHTML = catKeys.length
       ? catKeys.map((c) => { const off = !counts({ c });
-          return `<span${off ? ' class="off" title="오프 횟수에는 안 넣고 대기 시간에만 더해요"' : ""}><i style="background:${catColor(c)}"></i>${CATS[c]}<b>${byCat[c]}</b>${off ? "<small>횟수 제외</small>" : ""}</span>`; }).join("")
+          return `<span${off ? ' class="off" title="오프 횟수에는 안 넣고 대기·본 시간에만 더해요"' : ""}><i style="background:${catColor(c)}"></i>${CATS[c]}<b>${byCat[c]}</b>${off ? "<small>횟수 제외</small>" : ""}</span>`; }).join("")
       : `<span>아직 체크한 오프가 없어요. 다녀온 일정의 동그라미를 눌러보세요.</span>`;
     if (extra) $("cats").insertAdjacentHTML("beforeend", `<button class="fsnote" data-act="openFs">날짜 모르는 팬싸 ${extra}회 포함</button>`);
     document.querySelectorAll("[data-count]").forEach((b) => { b.checked = !!(cfg.count && cfg.count[b.dataset.count]); });
@@ -688,6 +756,7 @@ body { margin: 0; }
     renderGrade(done.length + fsOf("all"));
     renderBudget(evs);
     renderWait(evs);
+    renderSee(evs);
     const rates = inYearAll.map((e) => Number(logOf(e.id).rating) || 0).filter(Boolean);
     $("rateAvg").textContent = rates.length ? "★ " + (rates.reduce((a, b) => a + b, 0) / rates.length).toFixed(1) : "–";
     const last = inYearAll.filter((e) => e.d <= today).sort((a, b) => b.d.localeCompare(a.d))[0];
@@ -701,6 +770,7 @@ body { margin: 0; }
     const done = !!L.done;
     const metaBits = [];
     if (L.wait) metaBits.push(`<span>⏱ 대기 ${esc(fmtHours(Number(L.wait)))}</span>`);
+    if (L.see) metaBits.push(`<span>👀 ${esc(fmtMin(Number(L.see)))}</span>`);
     if (L.cost != null) metaBits.push(`<span>💸 ${money(Number(L.cost))}</span>`);
     if (L.rating) metaBits.push(`<span class="stars" aria-label="만족도 ${L.rating}점">${"★".repeat(L.rating)}${"☆".repeat(5 - L.rating)}</span>`);
     if (L.memo) metaBits.push(`<span class="memo">${esc(L.memo.split("\n")[0])}</span>`);
@@ -727,12 +797,14 @@ body { margin: 0; }
       <div class="inline">
         <div class="field"><label for="wait-${esc(e.id)}">대기 시간</label>
           <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="${waitDefOf(e)}"><span>시간</span></div></div>
+        <div class="field"><label for="see-${esc(e.id)}">멤버 본 시간</label>
+          <div class="wait"><input id="see-${esc(e.id)}" data-field="see" type="number" min="0" max="1440" step="5" inputmode="numeric" value="${L.see ?? ""}" placeholder="${seeDefOf(e)}"><span>분</span></div></div>
         <div class="field"><label for="cost-${esc(e.id)}">쓴 돈</label>
           <div class="wait"><input id="cost-${esc(e.id)}" data-field="cost" type="number" min="0" max="10000" step="0.1" inputmode="decimal" value="${toMan(L.cost)}" placeholder="${costDefOf(e) == null ? "직접" : toMan(costDefOf(e))}"><span>만원</span></div></div>
         <div class="field"><span class="lab">만족도</span>
           <div class="rate" role="radiogroup" aria-label="만족도">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-rate="${n}" class="${n <= r ? "on" : ""}" role="radio" aria-checked="${n === r}" aria-label="${n}점">★</button>`).join("")}</div></div>
       </div>
-      <small class="saved" style="margin-top:-8px">비워 두면 ${e.dw != null || e.dc != null ? "이 일정" : esc(CATS[e.c] || "기타")} 기본값(대기 ${waitDefOf(e)}시간 · ${costDefOf(e) == null ? "금액 없음" : fmtWon(costDefOf(e))})으로 계산해요</small>
+      <small class="saved" style="margin-top:-8px">비워 두면 ${e.dw != null || e.dc != null || e.ds != null ? "이 일정" : esc(CATS[e.c] || "기타")} 기본값(대기 ${waitDefOf(e)}시간 · 본 시간 ${seeDefOf(e) ? fmtMin(seeDefOf(e)) : "0분"} · ${costDefOf(e) == null ? "금액 없음" : fmtWon(costDefOf(e))})으로 계산해요</small>
       <div class="field"><label for="memo-${esc(e.id)}">메모</label>
         <textarea id="memo-${esc(e.id)}" data-field="memo" maxlength="2000" placeholder="자리, 동행, 기억에 남는 순간, 다음엔 이렇게…">${esc(L.memo || "")}</textarea></div>
       <div class="actions">
@@ -818,6 +890,8 @@ body { margin: 0; }
     if (typeof l.doneAt === "string") out.doneAt = l.doneAt.slice(0, 40);
     const w = Number(l.wait);
     if (l.wait != null && l.wait !== "" && isFinite(w) && w >= 0) out.wait = Math.min(w, 72);
+    const m = Number(l.see);
+    if (l.see != null && l.see !== "" && isFinite(m) && m >= 0) out.see = Math.min(Math.round(m), 1440);
     const won = Number(l.cost);
     if (l.cost != null && l.cost !== "" && isFinite(won) && won >= 0) out.cost = Math.min(Math.round(won), 1e8);
     const r = Math.round(Number(l.rating));
@@ -844,7 +918,7 @@ body { margin: 0; }
   function cleanCfg(c) {
     const out = {};
     if (!c || typeof c !== "object") return out;
-    for (const [kind, max] of [["wait", 72], ["cost", 1e8]]) {
+    for (const [kind, max] of [["wait", 72], ["see", 1440], ["cost", 1e8]]) {
       const src = c[kind] && typeof c[kind] === "object" ? c[kind] : {};
       const m = {};
       for (const k of Object.keys(CATS)) { const v = Number(src[k]); if (src[k] != null && src[k] !== "" && isFinite(v) && v >= 0) m[k] = Math.min(v, max); }
@@ -923,6 +997,7 @@ body { margin: 0; }
       }
       case "openFs": return openPanel("fansign", "count");
       case "openWait": $("waitBox").open = true; return $("waitBox").scrollIntoView({ block: "start", behavior: "smooth" });
+      case "openSee": $("seeBox").open = true; return $("seeBox").scrollIntoView({ block: "start", behavior: "smooth" });
       case "moreUpcoming": ui.upcomingAll = !ui.upcomingAll; return render();
       case "money": ev.preventDefault(); showMoney = !showMoney; syncEyes(); return render();
       case "tiers": $("tiers").hidden = !$("tiers").hidden; return render();
@@ -937,6 +1012,7 @@ body { margin: 0; }
     const id = ev.target.closest("[data-id]").dataset.id;
     const raw = ev.target.value;
     const val = f === "wait" ? (raw === "" ? null : Math.max(0, Number(raw)))
+      : f === "see" ? (raw === "" ? null : Math.round(Math.max(0, Number(raw))))
       : f === "cost" ? (raw === "" ? null : Math.round(Math.max(0, Number(raw)) * 10000))
       : raw;
     patchLog(id, { [f]: val });
@@ -1023,20 +1099,20 @@ body { margin: 0; }
     if (!el) return;
     const kind = el.dataset.cfg, c = el.dataset.k, raw = el.value;
     const num = raw === "" ? null : Math.max(0, Number(raw));
-    const val = num == null || !isFinite(num) ? null : kind === "wait" ? num : Math.round(num * 10000);
+    const val = num == null || !isFinite(num) ? null : kind === "wait" ? num : kind === "see" ? Math.round(num) : Math.round(num * 10000);
     if (kind === "album") cfg = { ...cfg, album: val };
     else cfg = { ...cfg, [kind]: { ...(cfg[kind] || {}), [c]: val } };
     cfg = { ...cleanCfg(cfg), at: new Date().toISOString() };
     $("cfgSaved-" + kind).textContent = saveLocal() ? "저장됨" : "저장 실패";
     renderStats(allEvents());
   }));
-  // 처음 기본값으로: 대기 칸은 대기 시간만, 예산 칸은 비용·앨범만 되돌린다
+  // 처음 기본값으로: 대기·본 시간 칸은 그 값만, 예산 칸은 비용·앨범만 되돌린다
   document.querySelectorAll("[data-cfg-reset]").forEach((b) => b.addEventListener("click", () => {
     const kind = b.dataset.cfgReset;
     if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "한 번 더 누르면 되돌려요"; return; }
     delete b.dataset.confirm; b.textContent = "처음 기본값으로";
     const next = { ...cfg, at: new Date().toISOString() };
-    if (kind === "wait") delete next.wait; else { delete next.cost; delete next.album; }
+    if (kind === "wait" || kind === "see") delete next[kind]; else { delete next.cost; delete next.album; }
     cfg = next;
     $("cfgSaved-" + kind).textContent = saveLocal() ? "처음 기본값으로 되돌렸어요" : "저장 실패";
     renderCfg(kind); render();
