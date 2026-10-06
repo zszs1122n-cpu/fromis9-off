@@ -216,6 +216,9 @@ button { cursor: pointer; }
 .est { font-size: 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 0 4px; margin-left: 4px; vertical-align: 1px; }
 
 /* 덕질 예산 */
+.stat-link { display: block; font: inherit; color: inherit; text-align: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.stat-link small::after { content: " ›"; color: var(--accent); }
+#waitBox { margin-bottom: 12px; }
 .budget { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
 .budget > summary { list-style: none; cursor: pointer; padding: 14px 16px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .budget > summary::-webkit-details-marker { display: none; }
@@ -233,7 +236,7 @@ button { cursor: pointer; }
 .brk-row.total { border-bottom: 0; font-weight: 600; }
 .budget .hint { margin: 0; font-size: 12px; color: var(--muted); }
 .cfg { display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); }
-.cfg-grid { display: grid; grid-template-columns: minmax(0, 1fr) 96px 96px; gap: 6px 10px; align-items: center; font-size: 13px; }
+.cfg-grid { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 6px 10px; align-items: center; font-size: 13px; }
 .cfg-grid .h { font-size: 12px; color: var(--muted); }
 .cfg-grid input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 8px; font-family: var(--f-num); }
 .cfg-grid i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
@@ -273,22 +276,35 @@ body { margin: 0; }
       <div class="cats" id="cats"></div>
     </div>
     <div class="ticket-stub">
-      <div class="stat"><small>총 대기 시간<span class="est">추정</span></small><b id="waitSum" class="won">–</b></div>
+      <button type="button" class="stat stat-link" data-act="openWait" aria-controls="waitBox"><small>총 대기 시간<span class="est">추정</span></small><b id="waitSum" class="won">–</b></button>
       <div class="stat"><small>총 쓴 돈<span class="est">추정</span><button type="button" class="eye" data-act="money"></button></small><b id="spentSum" class="won">–</b></div>
       <div class="stat"><small>평균 만족도</small><b id="rateAvg">–</b></div>
       <div class="stat"><small>최근 오프</small><b id="last" style="font-size:14px">–</b></div>
     </div>
   </section>
 
+  <details class="budget" id="waitBox">
+    <summary><b>대기 시간 추정치</b><span class="sum" id="waitBoxSum"></span></summary>
+    <div class="budget-body">
+      <div class="brk" id="waitBrk"></div>
+      <p class="hint">종류별 기본 대기 시간으로 계산한 추정치예요. 일정 제목을 눌러 실제 대기 시간을 적으면 그 일정은 적은 값으로 바뀌어요. 기본값이 나와 다르면 아래에서 바꿔 주세요.</p>
+      <div class="actions"><button type="button" class="btn ghost" data-cfg-btn="wait">기본값 바꾸기</button></div>
+      <div class="cfg" id="cfg-wait" hidden>
+        <div class="cfg-grid" id="cfgGrid-wait"></div>
+        <div class="actions"><span class="saved" id="cfgSaved-wait" style="margin-right:auto"></span><button type="button" class="btn ghost" data-cfg-reset="wait">처음 기본값으로</button></div>
+      </div>
+    </div>
+  </details>
+
   <details class="budget" id="budget">
     <summary><b>덕질 예산 추정치</b><span class="sum" id="budgetSum"></span><button type="button" class="eye" data-act="money"></button></summary>
     <div class="budget-body">
       <div class="brk" id="brk"></div>
       <p class="hint">종류별 기본값으로 계산한 추정치예요. 일정 제목을 눌러 실제 대기 시간·쓴 돈을 적으면 그 일정은 적은 값으로 바뀌어요. 음방을 간 활동마다 앨범 한 세트가 더해져요.</p>
-      <div class="actions"><button type="button" class="btn ghost" id="cfgBtn">기본값 바꾸기</button></div>
-      <div class="cfg" id="cfg" hidden>
-        <div class="cfg-grid" id="cfgGrid"></div>
-        <div class="actions"><span class="saved" id="cfgSaved" style="margin-right:auto"></span><button type="button" class="btn ghost" id="cfgReset">처음 기본값으로</button></div>
+      <div class="actions"><button type="button" class="btn ghost" data-cfg-btn="cost">기본값 바꾸기</button></div>
+      <div class="cfg" id="cfg-cost" hidden>
+        <div class="cfg-grid" id="cfgGrid-cost"></div>
+        <div class="actions"><span class="saved" id="cfgSaved-cost" style="margin-right:auto"></span><button type="button" class="btn ghost" data-cfg-reset="cost">처음 기본값으로</button></div>
       </div>
     </div>
   </details>
@@ -567,15 +583,49 @@ body { margin: 0; }
     $("brk").innerHTML = rows.join("");
   }
 
-  function renderCfg() {
-    const cell = (kind, c, val, def, step, max) =>
-      `<input type="number" min="0" max="${max}" step="${step}" inputmode="decimal" data-cfg="${kind}" data-k="${c}" value="${val ?? ""}" placeholder="${def ?? "직접"}" aria-label="${CATS[c] || "앨범"} ${kind === "wait" ? "대기 시간(시간)" : "비용(만원)"}">`;
-    $("cfgGrid").innerHTML = `<span class="h">종류</span><span class="h">대기 (시간)</span><span class="h">비용 (만원)</span>` +
-      Object.entries(CATS).map(([c, l]) => `<span><i style="background:${catColor(c)}"></i>${l}</span>` +
-        cell("wait", c, cfg.wait && cfg.wait[c], DEF.wait[c], 0.5, 72) +
-        cell("cost", c, cfg.cost && cfg.cost[c] != null ? toMan(cfg.cost[c]) : null, DEF.cost[c] == null ? null : toMan(DEF.cost[c]), 0.1, 10000)).join("") +
-      `<span>💿 앨범 1세트</span><span></span>${cell("album", "album", cfg.album != null ? toMan(cfg.album) : null, toMan(DEF.album), 0.1, 10000)}`;
+  // 다녀온 일정의 종류별 대기 시간 내역
+  function renderWait(evs) {
+    const past = evs.filter((e) => isDone(e.id) && !isHidden(e.id) && e.d <= today && (ui.year === "all" || e.d.startsWith(ui.year)));
+    const byCat = {};
+    let total = 0;
+    for (const e of past) {
+      const b = byCat[e.c] || (byCat[e.c] = { n: 0, sum: 0, own: 0 });
+      const w = waitOf(e);
+      b.n++; b.sum += w; total += w;
+      if (logOf(e.id).wait != null) b.own++;
+    }
+    const extra = fsOf(ui.year);
+    const fsWait = extra * waitDef("fansign");
+    total += fsWait;
+    $("waitBoxSum").innerHTML = `${ui.year === "all" ? "전체" : ui.year + "년"} 대기 <strong>${total ? "약 " + fmtHours(total) : "–"}</strong>`;
+    const rows = [];
+    for (const c of Object.keys(CATS)) {
+      const b = byCat[c];
+      if (!b) continue;
+      const bits = [`기본 ${waitDef(c)}시간`];
+      if (b.own) bits.push(`직접 적은 ${b.own}회`);
+      rows.push(`<div class="brk-row"><span><i style="background:${catColor(c)}"></i>${CATS[c]} ${b.n}회</span><b>${fmtHours(b.sum)}</b><small>${bits.join(" · ")}</small></div>`);
+    }
+    if (extra) rows.push(`<div class="brk-row"><span><i style="background:${catColor("fansign")}"></i>날짜 모르는 팬싸 ${extra}회</span><b>${fmtHours(fsWait)}</b><small>팬싸 기본 ${waitDef("fansign")}시간</small></div>`);
+    rows.push(rows.length
+      ? `<div class="brk-row total"><span>합계 (추정)</span><b>약 ${fmtHours(total)}</b></div>`
+      : `<div class="brk-row"><span>아직 다녀온 오프가 없어요</span><b>–</b></div>`);
+    $("waitBrk").innerHTML = rows.join("");
   }
+
+  // kind: "wait"(대기 시간 추정치 칸) 또는 "cost"(덕질 예산 추정치 칸)
+  function renderCfg(kind) {
+    const cell = (k, c, val, def, step, max) =>
+      `<input type="number" min="0" max="${max}" step="${step}" inputmode="decimal" data-cfg="${k}" data-k="${c}" value="${val ?? ""}" placeholder="${def ?? "직접"}" aria-label="${CATS[c] || "앨범"} ${k === "wait" ? "대기 시간(시간)" : "비용(만원)"}">`;
+    const row = ([c, l]) => `<span><i style="background:${catColor(c)}"></i>${l}</span>` + (kind === "wait"
+      ? cell("wait", c, cfg.wait && cfg.wait[c], DEF.wait[c], 0.5, 72)
+      : cell("cost", c, cfg.cost && cfg.cost[c] != null ? toMan(cfg.cost[c]) : null, DEF.cost[c] == null ? null : toMan(DEF.cost[c]), 0.1, 10000));
+    $("cfgGrid-" + kind).innerHTML = `<span class="h">종류</span><span class="h">${kind === "wait" ? "대기 (시간)" : "비용 (만원)"}</span>` +
+      Object.entries(CATS).map(row).join("") +
+      (kind === "cost" ? `<span>💿 앨범 1세트</span>${cell("album", "album", cfg.album != null ? toMan(cfg.album) : null, toMan(DEF.album), 0.1, 10000)}` : "");
+  }
+  const CFG_KINDS = ["wait", "cost"];
+  const renderOpenCfg = () => CFG_KINDS.forEach((k) => { if (!$("cfg-" + k).hidden) renderCfg(k); });
 
   /* ---------- 통계 ---------- */
   function renderStats(evs) {
@@ -603,6 +653,7 @@ body { margin: 0; }
     renderAch(done);
     renderGrade(done.length + fsOf("all"));
     renderBudget(evs);
+    renderWait(evs);
     const rates = inYear.map((e) => Number(logOf(e.id).rating) || 0).filter(Boolean);
     $("rateAvg").textContent = rates.length ? "★ " + (rates.reduce((a, b) => a + b, 0) / rates.length).toFixed(1) : "–";
     const last = inYear.filter((e) => e.d <= today).sort((a, b) => b.d.localeCompare(a.d))[0];
@@ -832,6 +883,7 @@ body { margin: 0; }
         saveLocal(); return render();
       }
       case "openFs": return openPanel("fansign", "count");
+      case "openWait": $("waitBox").open = true; return $("waitBox").scrollIntoView({ block: "start", behavior: "smooth" });
       case "moreUpcoming": ui.upcomingAll = !ui.upcomingAll; return render();
       case "money": ev.preventDefault(); showMoney = !showMoney; syncEyes(); return render();
       case "tiers": $("tiers").hidden = !$("tiers").hidden; return render();
@@ -912,13 +964,14 @@ body { margin: 0; }
   });
 
   /* ---------- 기본값 바꾸기 ---------- */
-  $("cfgBtn").addEventListener("click", () => {
-    const open = $("cfg").hidden;
-    $("cfg").hidden = !open;
-    $("cfgBtn").textContent = open ? "기본값 닫기" : "기본값 바꾸기";
-    if (open) renderCfg();
-  });
-  $("cfgGrid").addEventListener("input", (ev) => {
+  document.querySelectorAll("[data-cfg-btn]").forEach((btn) => btn.addEventListener("click", () => {
+    const kind = btn.dataset.cfgBtn, box = $("cfg-" + kind);
+    const open = box.hidden;
+    box.hidden = !open;
+    btn.textContent = open ? "기본값 닫기" : "기본값 바꾸기";
+    if (open) renderCfg(kind);
+  }));
+  CFG_KINDS.forEach((kind) => $("cfgGrid-" + kind).addEventListener("input", (ev) => {
     const el = ev.target.closest("[data-cfg]");
     if (!el) return;
     const kind = el.dataset.cfg, c = el.dataset.k, raw = el.value;
@@ -927,17 +980,20 @@ body { margin: 0; }
     if (kind === "album") cfg = { ...cfg, album: val };
     else cfg = { ...cfg, [kind]: { ...(cfg[kind] || {}), [c]: val } };
     cfg = { ...cleanCfg(cfg), at: new Date().toISOString() };
-    $("cfgSaved").textContent = saveLocal() ? "저장됨" : "저장 실패";
+    $("cfgSaved-" + kind).textContent = saveLocal() ? "저장됨" : "저장 실패";
     renderStats(allEvents());
-  });
-  $("cfgReset").addEventListener("click", (ev) => {
-    const b = ev.currentTarget;
+  }));
+  // 처음 기본값으로: 대기 칸은 대기 시간만, 예산 칸은 비용·앨범만 되돌린다
+  document.querySelectorAll("[data-cfg-reset]").forEach((b) => b.addEventListener("click", () => {
+    const kind = b.dataset.cfgReset;
     if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "한 번 더 누르면 되돌려요"; return; }
     delete b.dataset.confirm; b.textContent = "처음 기본값으로";
-    cfg = { at: new Date().toISOString() };
-    $("cfgSaved").textContent = saveLocal() ? "처음 기본값으로 되돌렸어요" : "저장 실패";
-    renderCfg(); render();
-  });
+    const next = { ...cfg, at: new Date().toISOString() };
+    if (kind === "wait") delete next.wait; else { delete next.cost; delete next.album; }
+    cfg = next;
+    $("cfgSaved-" + kind).textContent = saveLocal() ? "처음 기본값으로 되돌렸어요" : "저장 실패";
+    renderCfg(kind); render();
+  }));
   $("addform").addEventListener("submit", (ev) => {
     ev.preventDefault();
     const d = $("addDate").value, t = $("addTitle").value.trim(), c = $("addCat").value;
@@ -986,7 +1042,7 @@ body { margin: 0; }
     const f = cleanFs(b.fs);
     if (Object.keys(f).length && String(f.at || "") > String(fs.at || "")) { fs = f; n++; }
     const g = cleanCfg(b.cfg);
-    if (g.at && String(g.at) > String(cfg.at || "")) { cfg = g; n++; if (!$("cfg").hidden) renderCfg(); }
+    if (g.at && String(g.at) > String(cfg.at || "")) { cfg = g; n++; renderOpenCfg(); }
     if (!saveLocal()) return;
     renderFs(); render(); renderBackup();
     showNotice(n ? `백업에서 기록 ${n}개를 불러왔어요.` : "이미 같은 기록이 있어서 바뀐 게 없어요.");
@@ -1001,7 +1057,7 @@ body { margin: 0; }
   window.addEventListener("storage", (ev) => {
     if (ev.key !== KEY) return;
     loadLocal(); renderFs(); renderBackup();
-    if (!$("cfg").hidden && !(document.activeElement && document.activeElement.dataset.cfg)) renderCfg();
+    if (!(document.activeElement && document.activeElement.dataset.cfg)) renderOpenCfg();
     const active = document.activeElement;
     if (!(active && active.dataset && active.dataset.field)) render();
   });
