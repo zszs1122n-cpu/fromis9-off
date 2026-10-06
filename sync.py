@@ -38,7 +38,8 @@ EXCLUDE = re.compile(
     r"\d/\d|캐스팅|HIGHLIGHT|하이라이트|뉴스|News|NEWS|웃으면 안되는|시상식 채영|"
     r"채팅|발매|응원법|COUNTDOWN LIVE|COMEBACK LIVE|트위터|공식 X|워너비|직캠|"
     r"브이라이브|위버스 라이브|온라인|방구석|Choreography|[Vv]ideo|Stationhead|We Log|Stage cam|"
-    r"출근길|아이컨택캠|Stage Mix|Film|Ep\.|EP\.|백스테이지|퇵길"
+    r"출근길|아이컨택캠|Stage Mix|Film|Ep\.|EP\.|백스테이지|퇵길|"
+    r"시즌 ?그리팅|[Ss]eason'?s [Gg]reeting"  # 시즌그리팅 팬싸는 목록에서 빼고 '+ 팬싸 추가'로 직접 넣게 함 (사용자 요청)
 )
 
 # 설명란에 이게 있으면 홍보·예고 영상으로 보고 제외 (예: 공연 날이 아닌 '콘서트 홍보영상')
