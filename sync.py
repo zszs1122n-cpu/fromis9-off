@@ -110,7 +110,7 @@ RULES = [
     ("fanevent", r"OFFLINE EVENT|발대식"),
     ("fanmeeting", r"팬미팅|팬밋업|FAN PARTY|팬파티|팬콘"),
     # 단독 공연이 아닌 합동 무대는 페스티벌로 (사용자 확인)
-    ("festival", r"모모콘|Plant Our Planet|한미동맹|위문공연|전우마라톤|노사문화 ?콘서트|슈퍼히어로 ?콘서트|K-?POP ?(콘서트|CONCERT)|특집 ?콘서트"),
+    ("festival", r"모모콘|Plant Our Planet|한미동맹|위문공연|위문열차|노사문화 ?콘서트|슈퍼히어로 ?콘서트|K-?POP ?(콘서트|CONCERT)|특집 ?콘서트"),
     ("concert", r"콘서트|앵콜콘|TOUR|월드투어|[Cc]oncert"),
     ("music", r"^\s*(쇼!\s*)?(뮤직뱅크|음악중심|인기가요|엠카운트다운|더쇼|쇼 ?챔피언)"),
     ("campus", r"대학교?.*축제|성균관대|과학기술원|사관학교|카이스트|KAIST|대학 축제|SPRING BREEZE in CAMPUS"),
