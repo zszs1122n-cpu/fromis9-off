@@ -28,6 +28,7 @@
   --star: #d9921f;
   --warn: #b5442f;
   --c-concert: #7c4fd6;
+  --c-overseas: #3d5fc4;
   --c-fansign: #d4487d;
   --c-fanmeeting: #b0568f;
   --c-music: #2f6fd0;
@@ -45,14 +46,14 @@
   :root:not([data-theme="light"]) {
     --bg: #0e1411; --surface: #161f1a; --sunk: #1d2822; --fg: #e4ece6; --muted: #93a199; --line: #2a3730;
     --accent: #5cc98a; --accent-ink: #0b1a11; --accent-soft: #1f3a2a; --star: #f0b14a; --warn: #f08a72;
-    --c-concert: #b394ff; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
+    --c-concert: #b394ff; --c-overseas: #93abff; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0e1411; --surface: #161f1a; --sunk: #1d2822; --fg: #e4ece6; --muted: #93a199; --line: #2a3730;
   --accent: #5cc98a; --accent-ink: #0b1a11; --accent-soft: #1f3a2a; --star: #f0b14a; --warn: #f08a72;
-  --c-concert: #b394ff; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
+  --c-concert: #b394ff; --c-overseas: #93abff; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -89,6 +90,7 @@ button { cursor: pointer; }
 .cats b { color: var(--fg); font-family: var(--f-num); font-weight: 600; margin-left: 4px; }
 .stat small { display: block; font-size: 12px; color: var(--muted); }
 .stat b { font-family: var(--f-num); font-size: 18px; font-variant-numeric: tabular-nums; }
+.stat b.won { font-family: var(--f-body); font-weight: 600; }
 
 /* 필터 */
 .bar { display: flex; flex-direction: column; gap: 10px; }
@@ -186,6 +188,45 @@ button { cursor: pointer; }
 .backup .bar-row { gap: 8px; }
 .backup b { color: var(--fg); font-weight: 600; }
 .backup .warn { color: var(--warn); }
+/* 등급 */
+.grade { display: flex; flex-direction: column; gap: 6px; }
+.grade-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.grade-name { font-family: var(--f-display); font-size: 20px; color: var(--fg); }
+.grade-top small, .grade > small { font-size: 12px; color: var(--muted); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; margin-left: auto; }
+.meter { height: 6px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+.tiers { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.tier { border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; display: flex; flex-direction: column; font-size: 13px; }
+.tier small { font-family: var(--f-num); font-size: 11px; color: var(--muted); }
+.tier.past { color: var(--muted); }
+.tier.cur { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.est { font-size: 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 0 4px; margin-left: 4px; vertical-align: 1px; }
+
+/* 덕질 예산 */
+.budget { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.budget > summary { list-style: none; cursor: pointer; padding: 14px 16px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.budget > summary::-webkit-details-marker { display: none; }
+.budget > summary b { font-family: var(--f-display); font-weight: 400; font-size: 18px; }
+.budget > summary .sum { font-size: 13px; color: var(--muted); }
+.budget > summary .sum strong { color: var(--fg); font-weight: 600; }
+.budget > summary::after { content: "자세히 ▾"; margin-left: auto; font-size: 12px; color: var(--accent); }
+.budget[open] > summary::after { content: "접기 ▴"; }
+.budget-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 14px; }
+.brk { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.brk-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.brk-row i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.brk-row b { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.brk-row small { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+.brk-row.total { border-bottom: 0; font-weight: 600; }
+.budget .hint { margin: 0; font-size: 12px; color: var(--muted); }
+.cfg { display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); }
+.cfg-grid { display: grid; grid-template-columns: minmax(0, 1fr) 96px 96px; gap: 6px 10px; align-items: center; font-size: 13px; }
+.cfg-grid .h { font-size: 12px; color: var(--muted); }
+.cfg-grid input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 8px; font-family: var(--f-num); }
+.cfg-grid i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.cfg .actions { justify-content: flex-end; }
+.wait small { font-size: 12px; color: var(--muted); }
 .src { font-size: 12px; color: var(--muted); }
 .src a { color: inherit; }
 body { margin: 0; }
@@ -207,15 +248,31 @@ body { margin: 0; }
         <div class="eyebrow" id="countLabel">2022 – 2026 내가 간 오프</div>
         <div class="big"><b id="total">0</b><span>회</span></div>
       </div>
+      <div class="grade" id="grade"></div>
+      <div class="tiers" id="tiers" hidden></div>
       <div class="years" id="years"></div>
       <div class="cats" id="cats"></div>
     </div>
     <div class="ticket-stub">
-      <div class="stat"><small>총 대기 시간</small><b id="waitSum">–</b></div>
+      <div class="stat"><small>총 대기 시간<span class="est">추정</span></small><b id="waitSum" class="won">–</b></div>
+      <div class="stat"><small>총 쓴 돈<span class="est">추정</span></small><b id="spentSum" class="won">–</b></div>
       <div class="stat"><small>평균 만족도</small><b id="rateAvg">–</b></div>
       <div class="stat"><small>최근 오프</small><b id="last" style="font-size:14px">–</b></div>
     </div>
   </section>
+
+  <details class="budget" id="budget">
+    <summary><b>덕질 예산 추정치</b><span class="sum" id="budgetSum"></span></summary>
+    <div class="budget-body">
+      <div class="brk" id="brk"></div>
+      <p class="hint">종류별 기본값으로 계산한 추정치예요. 일정 제목을 눌러 실제 대기 시간·쓴 돈을 적으면 그 일정은 적은 값으로 바뀌어요. 음방을 간 활동마다 앨범 한 세트가 더해져요.</p>
+      <div class="actions"><button type="button" class="btn ghost" id="cfgBtn">기본값 바꾸기</button></div>
+      <div class="cfg" id="cfg" hidden>
+        <div class="cfg-grid" id="cfgGrid"></div>
+        <div class="actions"><span class="saved" id="cfgSaved" style="margin-right:auto"></span><button type="button" class="btn ghost" id="cfgReset">처음 기본값으로</button></div>
+      </div>
+    </div>
+  </details>
 
   <div class="notice" id="notice" hidden></div>
 
@@ -242,6 +299,8 @@ body { margin: 0; }
   <div class="fspanel" id="fsPanel" hidden>
     <p class="hint">날짜가 기억나지 않는 팬싸는 연도별 횟수만 적어 두세요. 총 횟수와 팬싸 횟수에 더해져요.</p>
     <div class="steppers" id="steppers"></div>
+    <div class="field"><label for="fsCost">이 팬싸들에 쓴 돈 (모두 합쳐서)</label>
+      <div class="wait"><input id="fsCost" type="number" min="0" max="10000" step="0.1" inputmode="decimal" placeholder="0" style="width:110px"><span>만원</span></div></div>
     <div class="field"><label for="fsMemo">메모</label><textarea id="fsMemo" maxlength="2000" placeholder="예: 24년 미니 팬싸 2번, 25년엔 대면 팬싸만…"></textarea></div>
     <div class="actions"><span class="saved" id="fsSaved" style="margin-right:auto"></span><button type="button" class="btn ghost" id="fsClose">닫기</button></div>
   </div>
@@ -252,7 +311,7 @@ body { margin: 0; }
   </section>
 
   <footer class="foot">
-    <span>동그라미를 누르면 1회 추가 · 제목을 누르면 대기 시간·만족도·메모를 적을 수 있어요 · 음방은 사녹과 본방을 따로 세요</span>
+    <span>동그라미를 누르면 1회 추가 · 제목을 누르면 대기 시간·쓴 돈·만족도·메모를 적을 수 있어요 · 음방은 사녹과 본방을 따로 세요</span>
     <button id="toggleHidden">숨긴 일정 보기</button>
   </footer>
 
@@ -271,9 +330,26 @@ body { margin: 0; }
 <script>
 (() => {
   const CATS = {
-    concert: "콘서트", fansign: "팬싸", fanmeeting: "팬미팅", music: "음악방송", campus: "대학 축제",
+    concert: "콘서트", overseas: "해외 투어", fansign: "팬싸", fanmeeting: "팬미팅", music: "음악방송", campus: "대학 축제",
     festival: "페스티벌", event: "행사", musical: "뮤지컬", etc: "기타",
   };
+  // 종류별 기본값: 대기 시간(시간), 비용(원). 팬싸 비용은 null = 일정마다 직접 적기
+  const DEF = {
+    wait: { concert: 2, overseas: 2, fansign: 1, fanmeeting: 2, music: 4, campus: 3, festival: 3, event: 3, musical: 2, etc: 0 },
+    cost: { concert: 250000, overseas: 1000000, fansign: null, fanmeeting: 70000, music: 10000, campus: 10000, festival: 25000, event: 25000, musical: 150000, etc: 0 },
+    album: 50000,
+  };
+  const COST_NOTE = { music: "교통비", campus: "교통비", festival: "약 2~3만원", event: "약 2~3만원", overseas: "항공·숙소·티켓", fansign: "직접 적기" };
+  // 오프 횟수 등급 [최소 횟수, 이름]
+  const TIERS = [
+    [0, "🌱 뉴비"], [6, "🌱 새싹 플로버"], [11, "🌿 떡잎 플로버"], [16, "☘️ 세잎클로버"], [21, "🍀 네잎클로버"],
+    [26, "💐 클로버 다발"], [31, "🎫 오프 단골"], [36, "📮 출석 도장러"], [41, "📌 현장 붙박이"], [46, "🎖️ 반백 플로버"],
+    [51, "⏳ 대기줄 베테랑"], [56, "🔦 응원봉 장인"], [61, "📣 떼창 마스터"], [66, "🎬 사녹 개근러"], [71, "📺 음방 지박령"],
+    [76, "🎪 축제 순례자"], [81, "✈️ 투어 동행자"], [86, "🗿 공방 고인물"], [91, "🧭 오프 마스터"], [96, "💯 백전노장"],
+    [101, "🛡️ 프나 수호대"], [106, "⚔️ 플로버 정예"], [111, "🏅 오프 국가대표"], [116, "🔥 전설의 시작"], [121, "📚 살아있는 기록"],
+    [126, "📜 프나 역사의 증인"], [131, "🏆 명예 플로버"], [136, "🌟 레전드 플로버"], [141, "🏛️ 명예의 전당"], [146, "💚 플로버 그 자체"],
+    [151, "👑 프나 10번째 멤버"],
+  ];
   const YEARS = ["2022", "2023", "2024", "2025", "2026"];
   const DOW = ["일", "월", "화", "수", "목", "금", "토"];
   const CHECK = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -285,7 +361,11 @@ body { margin: 0; }
   let custom = {};      // 직접 추가한 일정
   let logs = {};        // 체크·메모 기록
   let syncedAt = null;
-  let fs = {};          // 날짜 모르는 팬싸 횟수 {y2022 … y2026, unknown, memo}
+  let fs = {};          // 날짜 모르는 팬싸 횟수 {y2022 … y2026, unknown, cost, memo}
+  let cfg = {};         // 바꾼 기본값 {wait: {cat: h}, cost: {cat: 원}, album: 원}
+  const waitDef = (c) => { const v = cfg.wait && cfg.wait[c]; return v != null ? v : DEF.wait[c] ?? 0; };
+  const costDef = (c) => { const v = cfg.cost && cfg.cost[c]; return v != null ? v : DEF.cost[c] ?? 0; };
+  const albumPrice = () => cfg.album != null ? cfg.album : DEF.album;
   const FS_KEYS = [["y2022", "2022년"], ["y2023", "2023년"], ["y2024", "2024년"], ["y2025", "2025년"], ["y2026", "2026년"], ["unknown", "연도 모름"]];
   const fsOf = (year) => year === "all" ? FS_KEYS.reduce((a, [k]) => a + (Number(fs[k]) || 0), 0) : Number(fs["y" + year]) || 0;
   let loaded = { cal: false, logs: false };
@@ -299,7 +379,9 @@ body { margin: 0; }
   function allEvents() {
     const out = [];
     for (const [id, e] of Object.entries(calEvents)) {
-      out.push({ id, ...e, src: "cal", o: 1 });
+      // 서울 밖 투어 공연(IN TOKYO, in japan …)은 '해외 투어'로 따로 센다
+      const c = e.c === "concert" && /\bin (?!seoul\b)/i.test(e.t) ? "overseas" : e.c;
+      out.push({ id, ...e, c, src: "cal", o: 1 });
       // 음악방송 본방 중 사녹도 있었던 날은 '사녹' 항목을 하나 더 만든다 (체크·메모 따로)
       if (e.k === "live" && hasPrerec(id)) {
         out.push({ id: id + "-sanok", d: e.sd || e.d, t: e.t.replace(/ 본방$/, "") + " 사녹", c: "music", u: e.u, src: "sanok", parent: id, o: 0 });
@@ -320,6 +402,95 @@ body { margin: 0; }
   function fmtHours(h) {
     if (!h) return "–";
     return (Math.round(h * 10) / 10) + "시간";
+  }
+  function fmtWon(w) {
+    if (!w) return "0원";
+    if (w >= 10000) return (Math.round(w / 1000) / 10).toLocaleString("ko-KR") + "만원";
+    return Math.round(w).toLocaleString("ko-KR") + "원";
+  }
+  const toMan = (w) => w == null ? "" : Math.round(w / 1000) / 10;
+  const actOf = (e) => { const m = e.c === "music" && /^\[([^\]]+)\]/.exec(e.t); return m ? m[1] : null; };
+  const waitOf = (e) => { const w = logOf(e.id).wait; return w != null ? Number(w) : waitDef(e.c); };
+  const costOf = (e) => { const c = logOf(e.id).cost; return c != null ? Number(c) : costDef(e.c); };
+
+  // 일정 목록 → 종류별 비용·앨범 세트 계산. albumsSeen에 있는 활동은 앨범을 다시 사지 않는다
+  function costBreakdown(list, albumsSeen = new Set()) {
+    const byCat = {}, acts = [];
+    let total = 0;
+    for (const e of list) {
+      const b = byCat[e.c] || (byCat[e.c] = { n: 0, sum: 0, own: 0, missing: 0 });
+      const c = costOf(e);
+      b.n++;
+      if (logOf(e.id).cost != null) b.own++;
+      else if (c == null) b.missing++;
+      b.sum += c || 0; total += c || 0;
+      const a = actOf(e);
+      if (a && !albumsSeen.has(a)) { albumsSeen.add(a); acts.push(a); }
+    }
+    const album = acts.length * albumPrice();
+    return { byCat, acts, album, total: total + album };
+  }
+
+  function tierOf(n) {
+    let i = 0;
+    while (i + 1 < TIERS.length && n >= TIERS[i + 1][0]) i++;
+    return i;
+  }
+  const tierRange = (i) => i + 1 < TIERS.length ? `${TIERS[i][0]}–${TIERS[i + 1][0] - 1}회` : `${TIERS[i][0]}회 이상`;
+  function renderGrade(n) {
+    const i = tierOf(n);
+    const next = TIERS[i + 1];
+    const pct = next ? Math.round(((n - TIERS[i][0]) / (next[0] - TIERS[i][0])) * 100) : 100;
+    $("grade").innerHTML = `<div class="grade-top"><span class="grade-name">${TIERS[i][1]}</span><small>${tierRange(i)} · ${i + 1}/${TIERS.length}단계</small>
+        <button type="button" class="linkbtn" data-act="tiers" aria-expanded="${!$("tiers").hidden}">${$("tiers").hidden ? "등급표 보기" : "등급표 접기"}</button></div>
+      <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="다음 등급까지"><i style="width:${pct}%"></i></div>
+      <small>${next ? `다음 등급 '${next[1].replace(/^\S+ /, "")}'까지 ${next[0] - n}회` : "최고 등급이에요!"}</small>`;
+    if (!$("tiers").hidden) {
+      $("tiers").innerHTML = TIERS.map((t, k) => `<div class="tier${k === i ? " cur" : k < i ? " past" : ""}"><span>${t[1]}</span><small>${tierRange(k)}</small></div>`).join("");
+    }
+  }
+
+  function renderBudget(evs) {
+    const done = evs.filter((e) => isDone(e.id) && !isHidden(e.id) && (ui.year === "all" || e.d.startsWith(ui.year)));
+    const past = done.filter((e) => e.d <= today);
+    const seen = new Set();
+    const spent = costBreakdown(past, seen);
+    const fsCost = ui.year === "all" ? Number(fs.cost) || 0 : 0;
+    const total = spent.total + fsCost;
+    const plan = costBreakdown(done.filter((e) => e.d > today), seen);
+    $("spentSum").textContent = total ? "약 " + fmtWon(total) : "–";
+    $("budgetSum").innerHTML = `${ui.year === "all" ? "전체" : ui.year + "년"} 쓴 돈 <strong>약 ${fmtWon(total)}</strong>${plan.total ? ` · 앞으로 <strong>약 ${fmtWon(plan.total)}</strong>` : ""}`;
+
+    const rows = [];
+    for (const c of Object.keys(CATS)) {
+      const b = spent.byCat[c];
+      if (!b) continue;
+      const def = costDef(c);
+      const bits = [def != null ? `기본 ${fmtWon(def)}${COST_NOTE[c] && c !== "fansign" ? ` (${COST_NOTE[c]})` : ""}` : "기본값 없음 · 일정마다 직접 적기"];
+      if (b.own) bits.push(`직접 적은 ${b.own}회`);
+      if (b.missing) bits.push(`금액 안 적은 ${b.missing}회`);
+      rows.push(`<div class="brk-row"><span><i style="background:${catColor(c)}"></i>${CATS[c]} ${b.n}회</span><b>${fmtWon(b.sum)}</b><small>${bits.join(" · ")}</small></div>`);
+    }
+    if (spent.acts.length) rows.push(`<div class="brk-row"><span>💿 앨범 ${spent.acts.length}세트</span><b>${fmtWon(spent.album)}</b><small>음방 간 활동마다 한 세트 ${fmtWon(albumPrice())} · ${spent.acts.map(esc).join(", ")}</small></div>`);
+    if (ui.year === "all" && fsOf("all")) rows.push(`<div class="brk-row"><span><i style="background:${catColor("fansign")}"></i>날짜 모르는 팬싸 ${fsOf("all")}회</span><b>${fmtWon(fsCost)}</b><small>${fsCost ? "'팬싸 횟수만'에 적은 금액" : "<button type=\"button\" class=\"fsnote\" data-act=\"openFs\">'팬싸 횟수만'에서 쓴 돈 적기</button>"}</small></div>`);
+    rows.push(rows.length
+      ? `<div class="brk-row total"><span>합계 (추정)</span><b>약 ${fmtWon(total)}</b></div>`
+      : `<div class="brk-row"><span>아직 다녀온 오프가 없어요</span><b>0원</b></div>`);
+    if (plan.total) {
+      const n = Object.values(plan.byCat).reduce((a, b) => a + b.n, 0);
+      rows.push(`<div class="brk-row"><span>🗓️ 체크해 둔 다가오는 오프 ${n}회</span><b>약 ${fmtWon(plan.total)}</b><small>앞으로 들 예산${plan.acts.length ? ` · 앨범 ${plan.acts.length}세트 포함` : ""}</small></div>`);
+    }
+    $("brk").innerHTML = rows.join("");
+  }
+
+  function renderCfg() {
+    const cell = (kind, c, val, def, step, max) =>
+      `<input type="number" min="0" max="${max}" step="${step}" inputmode="decimal" data-cfg="${kind}" data-k="${c}" value="${val ?? ""}" placeholder="${def ?? "직접"}" aria-label="${CATS[c] || "앨범"} ${kind === "wait" ? "대기 시간(시간)" : "비용(만원)"}">`;
+    $("cfgGrid").innerHTML = `<span class="h">종류</span><span class="h">대기 (시간)</span><span class="h">비용 (만원)</span>` +
+      Object.entries(CATS).map(([c, l]) => `<span><i style="background:${catColor(c)}"></i>${l}</span>` +
+        cell("wait", c, cfg.wait && cfg.wait[c], DEF.wait[c], 0.5, 72) +
+        cell("cost", c, cfg.cost && cfg.cost[c] != null ? toMan(cfg.cost[c]) : null, DEF.cost[c] == null ? null : toMan(DEF.cost[c]), 0.1, 10000)).join("") +
+      `<span>💿 앨범 1세트</span><span></span>${cell("album", "album", cfg.album != null ? toMan(cfg.album) : null, toMan(DEF.album), 0.1, 10000)}`;
   }
 
   /* ---------- 통계 ---------- */
@@ -342,9 +513,11 @@ body { margin: 0; }
       : `<span>아직 체크한 오프가 없어요. 다녀온 일정의 동그라미를 눌러보세요.</span>`;
     if (extra) $("cats").insertAdjacentHTML("beforeend", `<button class="fsnote" data-act="openFs">날짜 모르는 팬싸 ${extra}회 포함</button>`);
 
-    const waits = inYear.map((e) => Number(logOf(e.id).wait) || 0);
-    const waitSum = waits.reduce((a, b) => a + b, 0);
-    $("waitSum").textContent = waitSum ? fmtHours(waitSum) : "–";
+    // 다녀온(오늘까지) 일정만: 직접 적은 대기 시간, 없으면 종류별 기본값
+    const waitSum = inYear.filter((e) => e.d <= today).reduce((a, e) => a + waitOf(e), 0) + extra * waitDef("fansign");
+    $("waitSum").textContent = waitSum ? "약 " + fmtHours(waitSum) : "–";
+    renderGrade(done.length + fsOf("all"));
+    renderBudget(evs);
     const rates = inYear.map((e) => Number(logOf(e.id).rating) || 0).filter(Boolean);
     $("rateAvg").textContent = rates.length ? "★ " + (rates.reduce((a, b) => a + b, 0) / rates.length).toFixed(1) : "–";
     const last = inYear.filter((e) => e.d <= today).sort((a, b) => b.d.localeCompare(a.d))[0];
@@ -358,6 +531,7 @@ body { margin: 0; }
     const done = !!L.done;
     const metaBits = [];
     if (L.wait) metaBits.push(`<span>⏱ 대기 ${esc(fmtHours(Number(L.wait)))}</span>`);
+    if (L.cost != null) metaBits.push(`<span>💸 ${esc(fmtWon(Number(L.cost)))}</span>`);
     if (L.rating) metaBits.push(`<span class="stars" aria-label="만족도 ${L.rating}점">${"★".repeat(L.rating)}${"☆".repeat(5 - L.rating)}</span>`);
     if (L.memo) metaBits.push(`<span class="memo">${esc(L.memo.split("\n")[0])}</span>`);
     const open = ui.open === e.id;
@@ -382,10 +556,13 @@ body { margin: 0; }
     return `<div class="detail" data-id="${esc(e.id)}">
       <div class="inline">
         <div class="field"><label for="wait-${esc(e.id)}">대기 시간</label>
-          <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="0"><span>시간</span></div></div>
+          <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="${waitDef(e.c)}"><span>시간</span></div></div>
+        <div class="field"><label for="cost-${esc(e.id)}">쓴 돈</label>
+          <div class="wait"><input id="cost-${esc(e.id)}" data-field="cost" type="number" min="0" max="10000" step="0.1" inputmode="decimal" value="${toMan(L.cost)}" placeholder="${costDef(e.c) == null ? "직접" : toMan(costDef(e.c))}"><span>만원</span></div></div>
         <div class="field"><span class="lab">만족도</span>
           <div class="rate" role="radiogroup" aria-label="만족도">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-rate="${n}" class="${n <= r ? "on" : ""}" role="radio" aria-checked="${n === r}" aria-label="${n}점">★</button>`).join("")}</div></div>
       </div>
+      <small class="saved" style="margin-top:-8px">비워 두면 ${esc(CATS[e.c] || "기타")} 기본값(대기 ${waitDef(e.c)}시간 · ${costDef(e.c) == null ? "금액 없음" : fmtWon(costDef(e.c))})으로 계산해요</small>
       <div class="field"><label for="memo-${esc(e.id)}">메모</label>
         <textarea id="memo-${esc(e.id)}" data-field="memo" maxlength="2000" placeholder="자리, 동행, 기억에 남는 순간, 다음엔 이렇게…">${esc(L.memo || "")}</textarea></div>
       <div class="actions">
@@ -472,6 +649,8 @@ body { margin: 0; }
     if (typeof l.doneAt === "string") out.doneAt = l.doneAt.slice(0, 40);
     const w = Number(l.wait);
     if (l.wait != null && l.wait !== "" && isFinite(w) && w >= 0) out.wait = Math.min(w, 72);
+    const won = Number(l.cost);
+    if (l.cost != null && l.cost !== "" && isFinite(won) && won >= 0) out.cost = Math.min(Math.round(won), 1e8);
     const r = Math.round(Number(l.rating));
     if (r >= 1 && r <= 5) out.rating = r;
     if (typeof l.memo === "string" && l.memo) out.memo = l.memo.slice(0, 2000);
@@ -487,8 +666,24 @@ body { margin: 0; }
     const out = {};
     if (!f || typeof f !== "object") return out;
     FS_KEYS.forEach(([k]) => { const n = Math.floor(Number(f[k])); if (n > 0) out[k] = Math.min(n, 999); });
+    const won = Math.round(Number(f.cost));
+    if (won > 0) out.cost = Math.min(won, 1e8);
     if (typeof f.memo === "string" && f.memo) out.memo = f.memo.slice(0, 2000);
     if (typeof f.at === "string") out.at = f.at.slice(0, 40);
+    return out;
+  }
+  function cleanCfg(c) {
+    const out = {};
+    if (!c || typeof c !== "object") return out;
+    for (const [kind, max] of [["wait", 72], ["cost", 1e8]]) {
+      const src = c[kind] && typeof c[kind] === "object" ? c[kind] : {};
+      const m = {};
+      for (const k of Object.keys(CATS)) { const v = Number(src[k]); if (src[k] != null && src[k] !== "" && isFinite(v) && v >= 0) m[k] = Math.min(v, max); }
+      if (Object.keys(m).length) out[kind] = m;
+    }
+    const a = Number(c.album);
+    if (c.album != null && c.album !== "" && isFinite(a) && a >= 0) out.album = Math.min(Math.round(a), 1e8);
+    if (typeof c.at === "string") out.at = c.at.slice(0, 40);
     return out;
   }
   function loadLocal() {
@@ -498,12 +693,13 @@ body { margin: 0; }
     for (const [id, l] of Object.entries(s.logs || {})) { const c = cleanLog(l); if (c) logs[id] = c; }
     for (const [id, e] of Object.entries(s.custom || {})) { const c = cleanCustom(e); if (c) custom[id] = c; }
     fs = cleanFs(s.fs);
+    cfg = cleanCfg(s.cfg);
     lastBackup = typeof s.lastBackup === "string" ? s.lastBackup : null;
   }
   let warnedStorage = false;
   function saveLocal() {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ v: 1, logs, custom, fs, lastBackup }));
+      localStorage.setItem(KEY, JSON.stringify({ v: 1, logs, custom, fs, cfg, lastBackup }));
       return true;
     } catch (err) {
       if (!warnedStorage) {
@@ -553,6 +749,7 @@ body { margin: 0; }
       }
       case "openFs": return openPanel("count");
       case "moreUpcoming": ui.upcomingAll = !ui.upcomingAll; return render();
+      case "tiers": $("tiers").hidden = !$("tiers").hidden; return render();
     }
   });
   document.addEventListener("keydown", (ev) => {
@@ -562,8 +759,12 @@ body { margin: 0; }
     const f = ev.target.dataset && ev.target.dataset.field;
     if (!f) return;
     const id = ev.target.closest("[data-id]").dataset.id;
-    const val = f === "wait" ? (ev.target.value === "" ? null : Math.max(0, Number(ev.target.value))) : ev.target.value;
+    const raw = ev.target.value;
+    const val = f === "wait" ? (raw === "" ? null : Math.max(0, Number(raw)))
+      : f === "cost" ? (raw === "" ? null : Math.round(Math.max(0, Number(raw)) * 10000))
+      : raw;
     patchLog(id, { [f]: val });
+    if (f !== "memo") renderStats(allEvents());
   });
 
   $("q").addEventListener("input", (e) => { ui.q = e.target.value; render(); });
@@ -592,6 +793,7 @@ body { margin: 0; }
         <button type="button" data-fs="${k}" data-d="1" aria-label="${label} 팬싸 1회 더하기">+</button></div></div>`;
     }).join("");
     if (document.activeElement !== $("fsMemo")) $("fsMemo").value = fs.memo || "";
+    if (document.activeElement !== $("fsCost")) $("fsCost").value = toMan(fs.cost);
   }
   function saveFs() {
     fs = { ...fs, at: new Date().toISOString() };
@@ -605,6 +807,38 @@ body { margin: 0; }
     saveFs(); renderFs(); render();
   });
   $("fsMemo").addEventListener("input", (e) => { fs = { ...fs, memo: e.target.value }; saveFs(); });
+  $("fsCost").addEventListener("input", (e) => {
+    const v = e.target.value === "" ? 0 : Math.round(Math.max(0, Number(e.target.value)) * 10000);
+    fs = { ...fs, cost: v }; saveFs(); render();
+  });
+
+  /* ---------- 기본값 바꾸기 ---------- */
+  $("cfgBtn").addEventListener("click", () => {
+    const open = $("cfg").hidden;
+    $("cfg").hidden = !open;
+    $("cfgBtn").textContent = open ? "기본값 닫기" : "기본값 바꾸기";
+    if (open) renderCfg();
+  });
+  $("cfgGrid").addEventListener("input", (ev) => {
+    const el = ev.target.closest("[data-cfg]");
+    if (!el) return;
+    const kind = el.dataset.cfg, c = el.dataset.k, raw = el.value;
+    const num = raw === "" ? null : Math.max(0, Number(raw));
+    const val = num == null || !isFinite(num) ? null : kind === "wait" ? num : Math.round(num * 10000);
+    if (kind === "album") cfg = { ...cfg, album: val };
+    else cfg = { ...cfg, [kind]: { ...(cfg[kind] || {}), [c]: val } };
+    cfg = { ...cleanCfg(cfg), at: new Date().toISOString() };
+    $("cfgSaved").textContent = saveLocal() ? "저장됨" : "저장 실패";
+    renderStats(allEvents());
+  });
+  $("cfgReset").addEventListener("click", (ev) => {
+    const b = ev.currentTarget;
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "한 번 더 누르면 되돌려요"; return; }
+    delete b.dataset.confirm; b.textContent = "처음 기본값으로";
+    cfg = { at: new Date().toISOString() };
+    $("cfgSaved").textContent = saveLocal() ? "처음 기본값으로 되돌렸어요" : "저장 실패";
+    renderCfg(); render();
+  });
   $("addform").addEventListener("submit", (ev) => {
     ev.preventDefault();
     const d = $("addDate").value, t = $("addTitle").value.trim(), c = $("addCat").value;
@@ -627,7 +861,7 @@ body { margin: 0; }
     el.className = days >= 30 ? "warn" : "";
   }
   $("exportBtn").addEventListener("click", () => {
-    const data = { app: "fromis9-off", v: 1, exportedAt: new Date().toISOString(), logs, custom, fs };
+    const data = { app: "fromis9-off", v: 1, exportedAt: new Date().toISOString(), logs, custom, fs, cfg };
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }));
     const a = document.createElement("a");
     a.href = url; a.download = `프나오프일지-백업-${today}.json`;
@@ -652,6 +886,8 @@ body { margin: 0; }
     for (const [id, e] of Object.entries(b.custom || {})) { const c = cleanCustom(e); if (c && !custom[id]) { custom[id] = c; n++; } }
     const f = cleanFs(b.fs);
     if (Object.keys(f).length && String(f.at || "") > String(fs.at || "")) { fs = f; n++; }
+    const g = cleanCfg(b.cfg);
+    if (g.at && String(g.at) > String(cfg.at || "")) { cfg = g; n++; if (!$("cfg").hidden) renderCfg(); }
     if (!saveLocal()) return;
     renderFs(); render(); renderBackup();
     showNotice(n ? `백업에서 기록 ${n}개를 불러왔어요.` : "이미 같은 기록이 있어서 바뀐 게 없어요.");
@@ -665,6 +901,7 @@ body { margin: 0; }
   window.addEventListener("storage", (ev) => {
     if (ev.key !== KEY) return;
     loadLocal(); renderFs(); renderBackup();
+    if (!$("cfg").hidden && !(document.activeElement && document.activeElement.dataset.cfg)) renderCfg();
     const active = document.activeElement;
     if (!(active && active.dataset && active.dataset.field)) render();
   });
