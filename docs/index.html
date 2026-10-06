@@ -524,8 +524,11 @@ body { margin: 0; }
   }
   const toMan = (w) => w == null ? "" : Math.round(w / 1000) / 10;
   const actOf = (e) => { const m = (e.c === "music" || e.c === "minifm") && /^\[([^\]]+)\]/.exec(e.t); return m ? m[1] : null; };
-  const waitOf = (e) => { const w = logOf(e.id).wait; return w != null ? Number(w) : waitDef(e.c); };
-  const costOf = (e) => { const c = logOf(e.id).cost; return c != null ? Number(c) : costDef(e.c); };
+  // 일정에 dw(대기 시간)·dc(비용)가 있으면 종류별 기본값 대신 그 값을 쓴다 (예: 무료 행사)
+  const waitDefOf = (e) => e.dw != null ? e.dw : waitDef(e.c);
+  const costDefOf = (e) => e.dc != null ? e.dc : costDef(e.c);
+  const waitOf = (e) => { const w = logOf(e.id).wait; return w != null ? Number(w) : waitDefOf(e); };
+  const costOf = (e) => { const c = logOf(e.id).cost; return c != null ? Number(c) : costDefOf(e); };
 
   // 일정 목록 → 종류별 비용·앨범 세트 계산. albumsSeen에 있는 활동은 앨범을 다시 사지 않는다
   function costBreakdown(list, albumsSeen = new Set()) {
@@ -712,13 +715,13 @@ body { margin: 0; }
     return `<div class="detail" data-id="${esc(e.id)}">
       <div class="inline">
         <div class="field"><label for="wait-${esc(e.id)}">대기 시간</label>
-          <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="${waitDef(e.c)}"><span>시간</span></div></div>
+          <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="${waitDefOf(e)}"><span>시간</span></div></div>
         <div class="field"><label for="cost-${esc(e.id)}">쓴 돈</label>
-          <div class="wait"><input id="cost-${esc(e.id)}" data-field="cost" type="number" min="0" max="10000" step="0.1" inputmode="decimal" value="${toMan(L.cost)}" placeholder="${costDef(e.c) == null ? "직접" : toMan(costDef(e.c))}"><span>만원</span></div></div>
+          <div class="wait"><input id="cost-${esc(e.id)}" data-field="cost" type="number" min="0" max="10000" step="0.1" inputmode="decimal" value="${toMan(L.cost)}" placeholder="${costDefOf(e) == null ? "직접" : toMan(costDefOf(e))}"><span>만원</span></div></div>
         <div class="field"><span class="lab">만족도</span>
           <div class="rate" role="radiogroup" aria-label="만족도">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-rate="${n}" class="${n <= r ? "on" : ""}" role="radio" aria-checked="${n === r}" aria-label="${n}점">★</button>`).join("")}</div></div>
       </div>
-      <small class="saved" style="margin-top:-8px">비워 두면 ${esc(CATS[e.c] || "기타")} 기본값(대기 ${waitDef(e.c)}시간 · ${costDef(e.c) == null ? "금액 없음" : fmtWon(costDef(e.c))})으로 계산해요</small>
+      <small class="saved" style="margin-top:-8px">비워 두면 ${e.dw != null || e.dc != null ? "이 일정" : esc(CATS[e.c] || "기타")} 기본값(대기 ${waitDefOf(e)}시간 · ${costDefOf(e) == null ? "금액 없음" : fmtWon(costDefOf(e))})으로 계산해요</small>
       <div class="field"><label for="memo-${esc(e.id)}">메모</label>
         <textarea id="memo-${esc(e.id)}" data-field="memo" maxlength="2000" placeholder="자리, 동행, 기억에 남는 순간, 다음엔 이렇게…">${esc(L.memo || "")}</textarea></div>
       <div class="actions">
