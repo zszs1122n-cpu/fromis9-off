@@ -101,6 +101,10 @@ button { cursor: pointer; }
 .stat small { display: block; font-size: 12px; color: var(--muted); }
 .stat b { font-family: var(--f-num); font-size: 18px; font-variant-numeric: tabular-nums; }
 .stat b.won { font-family: var(--f-body); font-weight: 600; }
+.since .linkbtn { margin-left: 6px; }
+.since input { margin-top: 4px; width: 100%; max-width: 160px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 13px; }
+.since #sinceAgo { margin-top: 2px; max-width: 150px; line-height: 1.45; }
+.since #sinceAgo span { white-space: nowrap; }
 
 /* 필터 */
 .bar { display: flex; flex-direction: column; gap: 10px; }
@@ -294,6 +298,10 @@ body { margin: 0; }
       <div class="stat"><small>평균 만족도</small><b id="rateAvg">–</b></div>
       <div class="stat"><small>첫 오프</small><b id="first" style="font-size:14px">–</b></div>
       <div class="stat"><small>최근 오프</small><b id="last" style="font-size:14px">–</b></div>
+      <div class="stat since"><small>입덕일<button type="button" class="linkbtn" data-act="since" id="sinceBtn" aria-controls="sinceInput">적기</button></small>
+        <b id="sinceDate" style="font-size:14px" hidden></b>
+        <input type="date" id="sinceInput" aria-label="입덕일" hidden>
+        <small id="sinceAgo"></small></div>
     </div>
   </section>
 
@@ -478,7 +486,7 @@ body { margin: 0; }
   let logs = {};        // 체크·메모 기록
   let syncedAt = null;
   let fs = {};          // 날짜 모르는 팬싸 횟수 {y2017 … y2026, unknown, cost, memo}
-  let cfg = {};         // 바꾼 기본값 {wait: {cat: h}, see: {cat: 분}, cost: {cat: 원}, album: 원, count: {soundcheck|minifm: true}}
+  let cfg = {};         // 바꾼 기본값 {wait: {cat: h}, see: {cat: 분}, cost: {cat: 원}, album: 원, count: {soundcheck|minifm: true}, since: 입덕일}
   const counts = (e) => !ADDON[e.c] || !!(cfg.count && cfg.count[e.c]);
   // 사녹·본방은 예전엔 '음악방송' 하나라서, 사녹 기본값을 따로 안 바꿨으면 본방(music)에 바꿔 둔 값을 같이 쓴다
   const CFG_FALLBACK = { sanok: "music" };
@@ -755,6 +763,7 @@ body { margin: 0; }
     $("waitSum").textContent = waitSum ? "약 " + fmtHours(waitSum) : "–";
     renderAch(done);
     renderGrade(done.length + fsOf("all"));
+    renderSince();
     renderBudget(evs);
     renderWait(evs);
     renderSee(evs);
@@ -769,6 +778,40 @@ body { margin: 0; }
     showOff("first", past[0]);
     showOff("last", past.length ? past.find((e) => e.d === past[past.length - 1].d) : null);
   }
+
+  /* ---------- 입덕일 ---------- */
+  // 입덕일부터 오늘까지: 몇 년 몇 개월 며칠 + 총 일수. 달 끝(1/31 → 2/28)은 그 달 마지막 날로 맞춘다
+  function sinceDiff(from, to) {
+    const [y1, m1, d1] = from.split("-").map(Number), [y2, m2, d2] = to.split("-").map(Number);
+    let months = (y2 - y1) * 12 + (m2 - m1);
+    if (d2 < d1) months--;
+    const ay = y1 + Math.floor((m1 - 1 + months) / 12), am = (m1 - 1 + months) % 12;
+    const anchor = Date.UTC(ay, am, Math.min(d1, new Date(Date.UTC(ay, am + 1, 0)).getUTCDate()));
+    const day = (t) => Math.round(t / 86400000);
+    return { y: Math.floor(months / 12), m: months % 12, d: day(Date.UTC(y2, m2 - 1, d2) - anchor), total: day(Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) };
+  }
+  let editingSince = false;
+  function renderSince() {
+    const since = cfg.since && cfg.since <= today ? cfg.since : null;
+    $("sinceBtn").textContent = editingSince ? "닫기" : since ? "고치기" : "적기";
+    $("sinceBtn").setAttribute("aria-expanded", editingSince);
+    $("sinceInput").hidden = !editingSince;
+    $("sinceDate").hidden = !since || editingSince;
+    $("sinceDate").textContent = since ? since.replaceAll("-", ".") : "";
+    if (!since) { $("sinceAgo").textContent = editingSince ? "" : "입덕한 날을 적으면 며칠째인지 알려줘요"; return; }
+    const x = sinceDiff(since, today);
+    const parts = [[x.y, "년"], [x.m, "개월"], [x.d, "일"]].filter(([n]) => n).map(([n, u]) => n + u).join(" ");
+    $("sinceAgo").innerHTML = x.total ? `입덕한 지 <span>${parts}</span> <span>(${x.total.toLocaleString("ko-KR")}일)</span>` : "오늘 입덕했어요!";
+  }
+  $("sinceInput").max = today;
+  $("sinceInput").addEventListener("change", (ev) => {
+    const v = ev.target.value;
+    // 연도를 한 자리씩 칠 때(0002-…)는 저장하지 않는다
+    if (v && !(/^(19|20)\d\d-\d\d-\d\d$/.test(v) && v <= today)) return;
+    const next = { ...cfg, at: new Date().toISOString() };
+    if (v) next.since = v; else delete next.since;
+    cfg = next; saveLocal(); renderSince();
+  });
 
   /* ---------- 목록 ---------- */
   function rowHtml(e) {
@@ -937,6 +980,7 @@ body { margin: 0; }
     }
     const a = Number(c.album);
     if (c.album != null && c.album !== "" && isFinite(a) && a >= 0) out.album = Math.min(Math.round(a), 1e8);
+    if (typeof c.since === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.since)) out.since = c.since;
     if (typeof c.at === "string") out.at = c.at.slice(0, 40);
     return out;
   }
@@ -1007,6 +1051,12 @@ body { margin: 0; }
       case "moreUpcoming": ui.upcomingAll = !ui.upcomingAll; return render();
       case "money": ev.preventDefault(); showMoney = !showMoney; syncEyes(); return render();
       case "tiers": $("tiers").hidden = !$("tiers").hidden; return render();
+      case "since":
+        editingSince = !editingSince;
+        $("sinceInput").value = cfg.since || "";
+        renderSince();
+        if (editingSince) $("sinceInput").focus();
+        return;
     }
   });
   document.addEventListener("keydown", (ev) => {
