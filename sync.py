@@ -106,7 +106,9 @@ PREREC_WEEKS = {
 # (카테고리, 정규식) — 위에서부터 먼저 맞는 것으로 분류
 RULES = [
     ("fansign", r"팬사인|팬싸"),
-    ("fanmeeting", r"팬미팅|팬밋업|FAN PARTY|팬파티|발대식|팬콘|OFFLINE EVENT"),  # #wenow, 한가위 대잔치 같은 팬 이벤트
+    # 팬미팅과 따로 세는 팬 이벤트: #wenow, 한가위 대잔치, Supersonic 발대식 (사용자 요청)
+    ("fanevent", r"OFFLINE EVENT|발대식"),
+    ("fanmeeting", r"팬미팅|팬밋업|FAN PARTY|팬파티|팬콘"),
     # 단독 공연이 아닌 합동 무대는 페스티벌로 (사용자 확인)
     ("festival", r"모모콘|Plant Our Planet|한미동맹|위문공연|노사문화 ?콘서트|슈퍼히어로 ?콘서트|K-?POP ?(콘서트|CONCERT)|특집 ?콘서트"),
     ("concert", r"콘서트|앵콜콘|TOUR|월드투어|[Cc]oncert"),
