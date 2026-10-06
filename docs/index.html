@@ -227,6 +227,10 @@ button { cursor: pointer; }
 .cfg-grid i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
 .cfg .actions { justify-content: flex-end; }
 .wait small { font-size: 12px; color: var(--muted); }
+.eye { background: none; border: 0; padding: 2px; margin-left: 4px; color: var(--muted); display: inline-grid; place-items: center; vertical-align: middle; border-radius: 6px; }
+.eye:hover { color: var(--accent); }
+.eye svg { width: 18px; height: 18px; }
+.masked { letter-spacing: 2px; color: var(--muted); }
 .src { font-size: 12px; color: var(--muted); }
 .src a { color: inherit; }
 body { margin: 0; }
@@ -255,14 +259,14 @@ body { margin: 0; }
     </div>
     <div class="ticket-stub">
       <div class="stat"><small>총 대기 시간<span class="est">추정</span></small><b id="waitSum" class="won">–</b></div>
-      <div class="stat"><small>총 쓴 돈<span class="est">추정</span></small><b id="spentSum" class="won">–</b></div>
+      <div class="stat"><small>총 쓴 돈<span class="est">추정</span><button type="button" class="eye" data-act="money"></button></small><b id="spentSum" class="won">–</b></div>
       <div class="stat"><small>평균 만족도</small><b id="rateAvg">–</b></div>
       <div class="stat"><small>최근 오프</small><b id="last" style="font-size:14px">–</b></div>
     </div>
   </section>
 
   <details class="budget" id="budget">
-    <summary><b>덕질 예산 추정치</b><span class="sum" id="budgetSum"></span></summary>
+    <summary><b>덕질 예산 추정치</b><span class="sum" id="budgetSum"></span><button type="button" class="eye" data-act="money"></button></summary>
     <div class="budget-body">
       <div class="brk" id="brk"></div>
       <p class="hint">종류별 기본값으로 계산한 추정치예요. 일정 제목을 눌러 실제 대기 시간·쓴 돈을 적으면 그 일정은 적은 값으로 바뀌어요. 음방을 간 활동마다 앨범 한 세트가 더해져요.</p>
@@ -348,7 +352,7 @@ body { margin: 0; }
     [76, "🎪 축제 순례자"], [81, "✈️ 투어 동행자"], [86, "🗿 공방 고인물"], [91, "🧭 오프 마스터"], [96, "💯 백전노장"],
     [101, "🛡️ 프나 수호대"], [106, "⚔️ 플로버 정예"], [111, "🏅 오프 국가대표"], [116, "🔥 전설의 시작"], [121, "📚 살아있는 기록"],
     [126, "📜 프나 역사의 증인"], [131, "🏆 명예 플로버"], [136, "🌟 레전드 플로버"], [141, "🏛️ 명예의 전당"], [146, "💚 플로버 그 자체"],
-    [151, "👑 프나 10번째 멤버"],
+    [151, "👑 프나 6번째 멤버"],
   ];
   const YEARS = ["2022", "2023", "2024", "2025", "2026"];
   const DOW = ["일", "월", "화", "수", "목", "금", "토"];
@@ -408,6 +412,20 @@ body { margin: 0; }
     if (w >= 10000) return (Math.round(w / 1000) / 10).toLocaleString("ko-KR") + "만원";
     return Math.round(w).toLocaleString("ko-KR") + "원";
   }
+  // 쓴 돈은 처음엔 가려 두고, 눈 모양을 눌러야 보인다 (새로 열 때마다 다시 가려짐)
+  let showMoney = false;
+  const EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  const MASK = '<span class="masked" aria-label="가려진 금액">••••</span>';
+  const money = (w, pre = "") => showMoney ? pre + fmtWon(w) : MASK;
+  function syncEyes() {
+    document.querySelectorAll('[data-act="money"]').forEach((b) => {
+      b.innerHTML = showMoney ? EYE_OPEN : EYE_OFF;
+      b.setAttribute("aria-pressed", showMoney);
+      b.setAttribute("aria-label", showMoney ? "쓴 돈 가리기" : "쓴 돈 보기");
+      b.title = showMoney ? "쓴 돈 가리기" : "쓴 돈 보기";
+    });
+  }
   const toMan = (w) => w == null ? "" : Math.round(w / 1000) / 10;
   const actOf = (e) => { const m = e.c === "music" && /^\[([^\]]+)\]/.exec(e.t); return m ? m[1] : null; };
   const waitOf = (e) => { const w = logOf(e.id).wait; return w != null ? Number(w) : waitDef(e.c); };
@@ -458,8 +476,8 @@ body { margin: 0; }
     const fsCost = ui.year === "all" ? Number(fs.cost) || 0 : 0;
     const total = spent.total + fsCost;
     const plan = costBreakdown(done.filter((e) => e.d > today), seen);
-    $("spentSum").textContent = total ? "약 " + fmtWon(total) : "–";
-    $("budgetSum").innerHTML = `${ui.year === "all" ? "전체" : ui.year + "년"} 쓴 돈 <strong>약 ${fmtWon(total)}</strong>${plan.total ? ` · 앞으로 <strong>약 ${fmtWon(plan.total)}</strong>` : ""}`;
+    $("spentSum").innerHTML = !showMoney ? MASK : total ? "약 " + fmtWon(total) : "–";
+    $("budgetSum").innerHTML = `${ui.year === "all" ? "전체" : ui.year + "년"} 쓴 돈 <strong>${money(total, "약 ")}</strong>${plan.total ? ` · 앞으로 <strong>${money(plan.total, "약 ")}</strong>` : ""}`;
 
     const rows = [];
     for (const c of Object.keys(CATS)) {
@@ -469,16 +487,16 @@ body { margin: 0; }
       const bits = [def != null ? `기본 ${fmtWon(def)}${COST_NOTE[c] && c !== "fansign" ? ` (${COST_NOTE[c]})` : ""}` : "기본값 없음 · 일정마다 직접 적기"];
       if (b.own) bits.push(`직접 적은 ${b.own}회`);
       if (b.missing) bits.push(`금액 안 적은 ${b.missing}회`);
-      rows.push(`<div class="brk-row"><span><i style="background:${catColor(c)}"></i>${CATS[c]} ${b.n}회</span><b>${fmtWon(b.sum)}</b><small>${bits.join(" · ")}</small></div>`);
+      rows.push(`<div class="brk-row"><span><i style="background:${catColor(c)}"></i>${CATS[c]} ${b.n}회</span><b>${money(b.sum)}</b><small>${bits.join(" · ")}</small></div>`);
     }
-    if (spent.acts.length) rows.push(`<div class="brk-row"><span>💿 앨범 ${spent.acts.length}세트</span><b>${fmtWon(spent.album)}</b><small>음방 간 활동마다 한 세트 ${fmtWon(albumPrice())} · ${spent.acts.map(esc).join(", ")}</small></div>`);
-    if (ui.year === "all" && fsOf("all")) rows.push(`<div class="brk-row"><span><i style="background:${catColor("fansign")}"></i>날짜 모르는 팬싸 ${fsOf("all")}회</span><b>${fmtWon(fsCost)}</b><small>${fsCost ? "'팬싸 횟수만'에 적은 금액" : "<button type=\"button\" class=\"fsnote\" data-act=\"openFs\">'팬싸 횟수만'에서 쓴 돈 적기</button>"}</small></div>`);
+    if (spent.acts.length) rows.push(`<div class="brk-row"><span>💿 앨범 ${spent.acts.length}세트</span><b>${money(spent.album)}</b><small>음방 간 활동마다 한 세트 ${fmtWon(albumPrice())} · ${spent.acts.map(esc).join(", ")}</small></div>`);
+    if (ui.year === "all" && fsOf("all")) rows.push(`<div class="brk-row"><span><i style="background:${catColor("fansign")}"></i>날짜 모르는 팬싸 ${fsOf("all")}회</span><b>${money(fsCost)}</b><small>${fsCost ? "'팬싸 횟수만'에 적은 금액" : "<button type=\"button\" class=\"fsnote\" data-act=\"openFs\">'팬싸 횟수만'에서 쓴 돈 적기</button>"}</small></div>`);
     rows.push(rows.length
-      ? `<div class="brk-row total"><span>합계 (추정)</span><b>약 ${fmtWon(total)}</b></div>`
+      ? `<div class="brk-row total"><span>합계 (추정)</span><b>${money(total, "약 ")}</b></div>`
       : `<div class="brk-row"><span>아직 다녀온 오프가 없어요</span><b>0원</b></div>`);
     if (plan.total) {
       const n = Object.values(plan.byCat).reduce((a, b) => a + b.n, 0);
-      rows.push(`<div class="brk-row"><span>🗓️ 체크해 둔 다가오는 오프 ${n}회</span><b>약 ${fmtWon(plan.total)}</b><small>앞으로 들 예산${plan.acts.length ? ` · 앨범 ${plan.acts.length}세트 포함` : ""}</small></div>`);
+      rows.push(`<div class="brk-row"><span>🗓️ 체크해 둔 다가오는 오프 ${n}회</span><b>${money(plan.total, "약 ")}</b><small>앞으로 들 예산${plan.acts.length ? ` · 앨범 ${plan.acts.length}세트 포함` : ""}</small></div>`);
     }
     $("brk").innerHTML = rows.join("");
   }
@@ -531,7 +549,7 @@ body { margin: 0; }
     const done = !!L.done;
     const metaBits = [];
     if (L.wait) metaBits.push(`<span>⏱ 대기 ${esc(fmtHours(Number(L.wait)))}</span>`);
-    if (L.cost != null) metaBits.push(`<span>💸 ${esc(fmtWon(Number(L.cost)))}</span>`);
+    if (L.cost != null) metaBits.push(`<span>💸 ${money(Number(L.cost))}</span>`);
     if (L.rating) metaBits.push(`<span class="stars" aria-label="만족도 ${L.rating}점">${"★".repeat(L.rating)}${"☆".repeat(5 - L.rating)}</span>`);
     if (L.memo) metaBits.push(`<span class="memo">${esc(L.memo.split("\n")[0])}</span>`);
     const open = ui.open === e.id;
@@ -749,6 +767,7 @@ body { margin: 0; }
       }
       case "openFs": return openPanel("count");
       case "moreUpcoming": ui.upcomingAll = !ui.upcomingAll; return render();
+      case "money": ev.preventDefault(); showMoney = !showMoney; syncEyes(); return render();
       case "tiers": $("tiers").hidden = !$("tiers").hidden; return render();
     }
   });
@@ -894,6 +913,7 @@ body { margin: 0; }
   });
 
   /* ---------- 시작 ---------- */
+  syncEyes();
   renderCatFilter();
   loadLocal();
   renderBackup();
