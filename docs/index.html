@@ -300,14 +300,15 @@ body { margin: 0; }
       <input class="search" id="q" type="search" placeholder="일정 검색 (예: 축제, 앵콜콘)">
       <button class="chip" id="onlyDone" aria-pressed="false">간 곳만</button>
       <button class="btn" id="addBtn">+ 오프 추가</button>
+      <button class="btn" id="fsBtn">+ 팬싸 추가</button>
     </div>
     <div class="bar-row" id="catFilter"></div>
   </section>
 
   <section class="addpanel" id="addPanel" hidden aria-label="오프 추가">
-  <div class="modes">
-    <button type="button" class="chip" data-mode="event" aria-pressed="true">날짜별 일정</button>
-    <button type="button" class="chip" data-mode="count" aria-pressed="false">팬싸 횟수만</button>
+  <div class="modes" id="modes">
+    <button type="button" class="chip" data-mode="count" aria-pressed="true">팬싸 횟수만</button>
+    <button type="button" class="chip" data-mode="event" aria-pressed="false">날짜별 팬싸</button>
   </div>
   <form class="addform" id="addform">
     <div class="field"><label for="addDate">날짜</label><input id="addDate" type="date" min="2022-01-01" max="2026-12-31" required></div>
@@ -712,7 +713,6 @@ body { margin: 0; }
   function renderCatFilter() {
     $("catFilter").innerHTML = [["all", "전체 종류"], ...Object.entries(CATS)]
       .map(([k, label]) => `<button class="chip" data-cat="${k}" aria-pressed="${ui.cat === k}">${k !== "all" ? `<i style="background:${catColor(k)}"></i>` : ""}${label}</button>`).join("");
-    $("addCat").innerHTML = Object.entries(CATS).map(([k, l]) => `<option value="${k}"${k === "fansign" ? " selected" : ""}>${l}</option>`).join("");
   }
 
   function renderSync() {
@@ -831,7 +831,7 @@ body { margin: 0; }
         delete custom[id]; delete logs[id]; ui.open = null;
         saveLocal(); return render();
       }
-      case "openFs": return openPanel("count");
+      case "openFs": return openPanel("fansign", "count");
       case "moreUpcoming": ui.upcomingAll = !ui.upcomingAll; return render();
       case "money": ev.preventDefault(); showMoney = !showMoney; syncEyes(); return render();
       case "tiers": $("tiers").hidden = !$("tiers").hidden; return render();
@@ -862,8 +862,22 @@ body { margin: 0; }
     if (mode === "event") { $("addDate").value = $("addDate").value || (today <= "2026-12-31" ? today : ""); $("addTitle").focus(); }
     else renderFs();
   }
-  function openPanel(mode) { $("addPanel").hidden = false; setMode(mode); $("addPanel").scrollIntoView({ block: "nearest", behavior: "smooth" }); }
-  $("addBtn").addEventListener("click", () => { if ($("addPanel").hidden) openPanel("event"); else $("addPanel").hidden = true; });
+  // '+ 오프 추가'는 팬싸 말고 다른 종류만, '+ 팬싸 추가'는 횟수만 → 날짜별 팬싸 순서
+  let panelKind = "off";
+  function openPanel(kind, mode) {
+    panelKind = kind;
+    const fsKind = kind === "fansign";
+    $("addPanel").setAttribute("aria-label", fsKind ? "팬싸 추가" : "오프 추가");
+    $("modes").hidden = !fsKind;
+    $("addTitle").placeholder = fsKind ? "예: 미니 팬싸 (영등포)" : "예: 대학 축제 (고려대)";
+    $("addCat").innerHTML = Object.entries(CATS).filter(([k]) => fsKind ? k === "fansign" : k !== "fansign")
+      .map(([k, l]) => `<option value="${k}">${l}</option>`).join("");
+    $("addCat").disabled = fsKind;
+    $("addPanel").hidden = false; setMode(mode); $("addPanel").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  const togglePanel = (kind, mode) => { if (!$("addPanel").hidden && panelKind === kind) $("addPanel").hidden = true; else openPanel(kind, mode); };
+  $("addBtn").addEventListener("click", () => togglePanel("off", "event"));
+  $("fsBtn").addEventListener("click", () => togglePanel("fansign", "count"));
   document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
   $("addCancel").addEventListener("click", () => { $("addPanel").hidden = true; });
   $("fsClose").addEventListener("click", () => { $("addPanel").hidden = true; });
