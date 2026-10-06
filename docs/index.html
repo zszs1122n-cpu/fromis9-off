@@ -328,7 +328,7 @@ body { margin: 0; }
   </section>
 
   <footer class="foot">
-    <span>동그라미를 누르면 1회 추가 · 제목을 누르면 대기 시간·쓴 돈·만족도·메모를 적을 수 있어요 · 음방은 사녹과 본방을 따로 세요</span>
+    <span>동그라미를 누르면 1회 추가 · 제목을 누르면 대기 시간·쓴 돈·만족도·메모를 적을 수 있어요 · 음방은 사녹과 본방, 콘서트는 사운드체크와 본공연을 따로 세요</span>
     <button id="toggleHidden">숨긴 일정 보기</button>
   </footer>
 
@@ -447,13 +447,17 @@ body { margin: 0; }
       if (e.k === "live" && hasPrerec(id)) {
         out.push({ id: id + "-sanok", d: e.sd || e.d, t: e.t.replace(/ 본방$/, "") + " 사녹", c: "music", u: e.u, src: "sanok", parent: id, o: 0 });
       }
+      // 2024년 이후 콘서트(일본 공연 제외)는 '사운드체크' 항목을 하나 더 만든다
+      if (e.c === "concert" && e.d >= "2024" && !/tokyo|japan|osaka|도쿄|일본|오사카/i.test(e.t)) {
+        out.push({ id: id + "-sc", d: e.d, t: e.t + " 사운드체크", c, u: e.u, src: "sc", parent: id, o: 0 });
+      }
     }
     for (const [id, e] of Object.entries(custom)) out.push({ id, ...e, src: "me" });
     return out;
   }
   const logOf = (id) => logs[id] || {};
   const hasPrerec = (id) => !!(calEvents[id] && calEvents[id].s);
-  const isHidden = (id) => !!logOf(id.endsWith("-sanok") ? id.slice(0, -6) : id).hidden;
+  const isHidden = (id) => !!logOf(id.replace(/-(sanok|sc)$/, "")).hidden;
   const isDone = (id) => !!logOf(id).done;
 
   function fmtDate(d) {
@@ -485,8 +489,11 @@ body { margin: 0; }
   }
   const toMan = (w) => w == null ? "" : Math.round(w / 1000) / 10;
   const actOf = (e) => { const m = e.c === "music" && /^\[([^\]]+)\]/.exec(e.t); return m ? m[1] : null; };
-  const waitOf = (e) => { const w = logOf(e.id).wait; return w != null ? Number(w) : waitDef(e.c); };
-  const costOf = (e) => { const c = logOf(e.id).cost; return c != null ? Number(c) : costDef(e.c); };
+  // 사운드체크는 본공연 대기·티켓에 포함으로 보고 기본값 0
+  const waitDefOf = (e) => e.src === "sc" ? 0 : waitDef(e.c);
+  const costDefOf = (e) => e.src === "sc" ? 0 : costDef(e.c);
+  const waitOf = (e) => { const w = logOf(e.id).wait; return w != null ? Number(w) : waitDefOf(e); };
+  const costOf = (e) => { const c = logOf(e.id).cost; return c != null ? Number(c) : costDefOf(e); };
 
   // 일정 목록 → 종류별 비용·앨범 세트 계산. albumsSeen에 있는 활동은 앨범을 다시 사지 않는다
   function costBreakdown(list, albumsSeen = new Set()) {
@@ -633,13 +640,13 @@ body { margin: 0; }
     return `<div class="detail" data-id="${esc(e.id)}">
       <div class="inline">
         <div class="field"><label for="wait-${esc(e.id)}">대기 시간</label>
-          <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="${waitDef(e.c)}"><span>시간</span></div></div>
+          <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="${waitDefOf(e)}"><span>시간</span></div></div>
         <div class="field"><label for="cost-${esc(e.id)}">쓴 돈</label>
-          <div class="wait"><input id="cost-${esc(e.id)}" data-field="cost" type="number" min="0" max="10000" step="0.1" inputmode="decimal" value="${toMan(L.cost)}" placeholder="${costDef(e.c) == null ? "직접" : toMan(costDef(e.c))}"><span>만원</span></div></div>
+          <div class="wait"><input id="cost-${esc(e.id)}" data-field="cost" type="number" min="0" max="10000" step="0.1" inputmode="decimal" value="${toMan(L.cost)}" placeholder="${costDefOf(e) == null ? "직접" : toMan(costDefOf(e))}"><span>만원</span></div></div>
         <div class="field"><span class="lab">만족도</span>
           <div class="rate" role="radiogroup" aria-label="만족도">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-rate="${n}" class="${n <= r ? "on" : ""}" role="radio" aria-checked="${n === r}" aria-label="${n}점">★</button>`).join("")}</div></div>
       </div>
-      <small class="saved" style="margin-top:-8px">비워 두면 ${esc(CATS[e.c] || "기타")} 기본값(대기 ${waitDef(e.c)}시간 · ${costDef(e.c) == null ? "금액 없음" : fmtWon(costDef(e.c))})으로 계산해요</small>
+      <small class="saved" style="margin-top:-8px">비워 두면 ${e.src === "sc" ? "사운드체크" : esc(CATS[e.c] || "기타")} 기본값(대기 ${waitDefOf(e)}시간 · ${costDefOf(e) == null ? "금액 없음" : fmtWon(costDefOf(e))})으로 계산해요</small>
       <div class="field"><label for="memo-${esc(e.id)}">메모</label>
         <textarea id="memo-${esc(e.id)}" data-field="memo" maxlength="2000" placeholder="자리, 동행, 기억에 남는 순간, 다음엔 이렇게…">${esc(L.memo || "")}</textarea></div>
       <div class="actions">
@@ -647,7 +654,7 @@ body { margin: 0; }
         <span class="saved" id="saved-${esc(e.id)}"></span>
         ${e.src === "me"
           ? `<button type="button" class="btn danger" data-act="remove">이 일정 삭제</button>`
-          : e.src === "sanok"
+          : e.src === "sanok" || e.src === "sc"
             ? ""
             : `<button type="button" class="btn ghost" data-act="hide">${L.hidden ? "다시 보이기" : "오프 아님 · 숨기기"}</button>`}
       </div>
