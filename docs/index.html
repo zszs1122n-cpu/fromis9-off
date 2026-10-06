@@ -29,6 +29,7 @@
   --warn: #b5442f;
   --c-concert: #7c4fd6;
   --c-overseas: #3d5fc4;
+  --c-soundcheck: #8a5a2b;
   --c-fansign: #d4487d;
   --c-fanmeeting: #b0568f;
   --c-fanevent: #1b7f9e;
@@ -47,14 +48,14 @@
   :root:not([data-theme="light"]) {
     --bg: #0e1411; --surface: #161f1a; --sunk: #1d2822; --fg: #e4ece6; --muted: #93a199; --line: #2a3730;
     --accent: #5cc98a; --accent-ink: #0b1a11; --accent-soft: #1f3a2a; --star: #f0b14a; --warn: #f08a72;
-    --c-concert: #b394ff; --c-overseas: #93abff; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-fanevent: #6cc6e0; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
+    --c-concert: #b394ff; --c-overseas: #93abff; --c-soundcheck: #d6a26e; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-fanevent: #6cc6e0; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0e1411; --surface: #161f1a; --sunk: #1d2822; --fg: #e4ece6; --muted: #93a199; --line: #2a3730;
   --accent: #5cc98a; --accent-ink: #0b1a11; --accent-soft: #1f3a2a; --star: #f0b14a; --warn: #f08a72;
-  --c-concert: #b394ff; --c-overseas: #93abff; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-fanevent: #6cc6e0; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
+  --c-concert: #b394ff; --c-overseas: #93abff; --c-soundcheck: #d6a26e; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-fanevent: #6cc6e0; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -329,7 +330,7 @@ body { margin: 0; }
   </section>
 
   <footer class="foot">
-    <span>동그라미를 누르면 1회 추가 · 제목을 누르면 대기 시간·쓴 돈·만족도·메모를 적을 수 있어요 · 음방은 사녹과 본방, 콘서트는 사운드체크와 본공연을 따로 세요</span>
+    <span>동그라미를 누르면 1회 추가 · 제목을 누르면 대기 시간·쓴 돈·만족도·메모를 적을 수 있어요 · 음방은 사녹과 본방, 콘서트는 사첵과 본공연을 따로 세요</span>
     <button id="toggleHidden">숨긴 일정 보기</button>
   </footer>
 
@@ -348,16 +349,17 @@ body { margin: 0; }
 <script>
 (() => {
   const CATS = {
-    concert: "콘서트", overseas: "해외 투어", fansign: "팬싸", fanmeeting: "팬미팅", fanevent: "이벤트", music: "음악방송", campus: "대학 축제",
+    concert: "콘서트", overseas: "해외 투어", soundcheck: "사첵", fansign: "팬싸", fanmeeting: "팬미팅", fanevent: "이벤트", music: "음악방송", campus: "대학 축제",
     festival: "페스티벌", event: "행사", musical: "뮤지컬", etc: "기타",
   };
   // 종류별 기본값: 대기 시간(시간), 비용(원). 팬싸 비용은 null = 일정마다 직접 적기
+  // 사첵 기본값 0: 본공연 대기·티켓에 포함으로 본다
   const DEF = {
-    wait: { concert: 2, overseas: 2, fansign: 1, fanmeeting: 2, fanevent: 2, music: 4, campus: 3, festival: 3, event: 3, musical: 2, etc: 0 },
-    cost: { concert: 250000, overseas: 1000000, fansign: null, fanmeeting: 70000, fanevent: 50000, music: 10000, campus: 10000, festival: 25000, event: 25000, musical: 150000, etc: 0 },
+    wait: { concert: 2, overseas: 2, soundcheck: 0, fansign: 1, fanmeeting: 2, fanevent: 2, music: 4, campus: 3, festival: 3, event: 3, musical: 2, etc: 0 },
+    cost: { concert: 250000, overseas: 1000000, soundcheck: 0, fansign: null, fanmeeting: 70000, fanevent: 50000, music: 10000, campus: 10000, festival: 25000, event: 25000, musical: 150000, etc: 0 },
     album: 50000,
   };
-  const COST_NOTE = { music: "교통비", campus: "교통비", festival: "약 2~3만원", event: "약 2~3만원", overseas: "항공·숙소·티켓", fansign: "직접 적기" };
+  const COST_NOTE = { music: "교통비", campus: "교통비", festival: "약 2~3만원", event: "약 2~3만원", overseas: "항공·숙소·티켓", soundcheck: "본공연에 포함", fansign: "직접 적기" };
   // 오프 횟수 등급 [최소 횟수, 이름]
   const TIERS = [
     [0, "🌱 뉴비"], [6, "🌱 새싹 플로버"], [11, "🌿 떡잎 플로버"], [16, "☘️ 세잎클로버"], [21, "🍀 네잎클로버"],
@@ -450,7 +452,7 @@ body { margin: 0; }
       }
       // 2024년 이후 콘서트(일본 공연 제외)는 '사운드체크' 항목을 하나 더 만든다
       if (e.c === "concert" && e.d >= "2024" && !/tokyo|japan|osaka|도쿄|일본|오사카/i.test(e.t)) {
-        out.push({ id: id + "-sc", d: e.d, t: e.t + " 사운드체크", c, u: e.u, src: "sc", parent: id, o: 0 });
+        out.push({ id: id + "-sc", d: e.d, t: e.t + " 사운드체크", c: "soundcheck", u: e.u, src: "sc", parent: id, o: 0 });
       }
     }
     for (const [id, e] of Object.entries(custom)) out.push({ id, ...e, src: "me" });
@@ -490,11 +492,8 @@ body { margin: 0; }
   }
   const toMan = (w) => w == null ? "" : Math.round(w / 1000) / 10;
   const actOf = (e) => { const m = e.c === "music" && /^\[([^\]]+)\]/.exec(e.t); return m ? m[1] : null; };
-  // 사운드체크는 본공연 대기·티켓에 포함으로 보고 기본값 0
-  const waitDefOf = (e) => e.src === "sc" ? 0 : waitDef(e.c);
-  const costDefOf = (e) => e.src === "sc" ? 0 : costDef(e.c);
-  const waitOf = (e) => { const w = logOf(e.id).wait; return w != null ? Number(w) : waitDefOf(e); };
-  const costOf = (e) => { const c = logOf(e.id).cost; return c != null ? Number(c) : costDefOf(e); };
+  const waitOf = (e) => { const w = logOf(e.id).wait; return w != null ? Number(w) : waitDef(e.c); };
+  const costOf = (e) => { const c = logOf(e.id).cost; return c != null ? Number(c) : costDef(e.c); };
 
   // 일정 목록 → 종류별 비용·앨범 세트 계산. albumsSeen에 있는 활동은 앨범을 다시 사지 않는다
   function costBreakdown(list, albumsSeen = new Set()) {
@@ -641,13 +640,13 @@ body { margin: 0; }
     return `<div class="detail" data-id="${esc(e.id)}">
       <div class="inline">
         <div class="field"><label for="wait-${esc(e.id)}">대기 시간</label>
-          <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="${waitDefOf(e)}"><span>시간</span></div></div>
+          <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="${waitDef(e.c)}"><span>시간</span></div></div>
         <div class="field"><label for="cost-${esc(e.id)}">쓴 돈</label>
-          <div class="wait"><input id="cost-${esc(e.id)}" data-field="cost" type="number" min="0" max="10000" step="0.1" inputmode="decimal" value="${toMan(L.cost)}" placeholder="${costDefOf(e) == null ? "직접" : toMan(costDefOf(e))}"><span>만원</span></div></div>
+          <div class="wait"><input id="cost-${esc(e.id)}" data-field="cost" type="number" min="0" max="10000" step="0.1" inputmode="decimal" value="${toMan(L.cost)}" placeholder="${costDef(e.c) == null ? "직접" : toMan(costDef(e.c))}"><span>만원</span></div></div>
         <div class="field"><span class="lab">만족도</span>
           <div class="rate" role="radiogroup" aria-label="만족도">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-rate="${n}" class="${n <= r ? "on" : ""}" role="radio" aria-checked="${n === r}" aria-label="${n}점">★</button>`).join("")}</div></div>
       </div>
-      <small class="saved" style="margin-top:-8px">비워 두면 ${e.src === "sc" ? "사운드체크" : esc(CATS[e.c] || "기타")} 기본값(대기 ${waitDefOf(e)}시간 · ${costDefOf(e) == null ? "금액 없음" : fmtWon(costDefOf(e))})으로 계산해요</small>
+      <small class="saved" style="margin-top:-8px">비워 두면 ${esc(CATS[e.c] || "기타")} 기본값(대기 ${waitDef(e.c)}시간 · ${costDef(e.c) == null ? "금액 없음" : fmtWon(costDef(e.c))})으로 계산해요</small>
       <div class="field"><label for="memo-${esc(e.id)}">메모</label>
         <textarea id="memo-${esc(e.id)}" data-field="memo" maxlength="2000" placeholder="자리, 동행, 기억에 남는 순간, 다음엔 이렇게…">${esc(L.memo || "")}</textarea></div>
       <div class="actions">
