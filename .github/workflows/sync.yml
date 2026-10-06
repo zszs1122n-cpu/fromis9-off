@@ -1,0 +1,30 @@
+# 매일 오전 9시(KST)에 캘린더에서 오프 일정을 다시 골라 docs/events.json을 갱신한다
+name: 캘린더 동기화
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # UTC 00:00 = KST 09:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 일정 가져오기
+        env:
+          OFF_OUT: docs/events.json
+        run: python sync.py
+      - name: 바뀐 일정 저장
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/events.json
+          git diff --cached --quiet || git commit -m "캘린더 동기화 $(TZ=Asia/Seoul date +%F)"
+          git push

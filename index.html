@@ -1,0 +1,608 @@
+<title>프나 오프 일지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout: 한 줄 기둥(최대 720px) — 위에 누적 횟수 티켓, 아래에 구글 태스크식 체크 목록 */
+:root {
+  --bg: #eef3ef;
+  --surface: #ffffff;
+  --sunk: #e3ebe5;
+  --fg: #17211c;
+  --muted: #5f6d65;
+  --line: #d3ddd6;
+  --accent: #23874f;
+  --accent-ink: #ffffff;
+  --accent-soft: #d8eedf;
+  --star: #d9921f;
+  --warn: #b5442f;
+  --c-concert: #7c4fd6;
+  --c-fansign: #d4487d;
+  --c-fanmeeting: #b0568f;
+  --c-music: #2f6fd0;
+  --c-campus: #1f8a77;
+  --c-festival: #c76a14;
+  --c-event: #6b7a1f;
+  --c-musical: #a23d3d;
+  --c-etc: #5f6d65;
+  --f-display: "Do Hyeon", "IBM Plex Sans KR", sans-serif;
+  --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --f-num: "IBM Plex Mono", ui-monospace, monospace;
+  --f-memo: "Gowun Dodum", "IBM Plex Sans KR", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1411; --surface: #161f1a; --sunk: #1d2822; --fg: #e4ece6; --muted: #93a199; --line: #2a3730;
+    --accent: #5cc98a; --accent-ink: #0b1a11; --accent-soft: #1f3a2a; --star: #f0b14a; --warn: #f08a72;
+    --c-concert: #b394ff; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1411; --surface: #161f1a; --sunk: #1d2822; --fg: #e4ece6; --muted: #93a199; --line: #2a3730;
+  --accent: #5cc98a; --accent-ink: #0b1a11; --accent-soft: #1f3a2a; --star: #f0b14a; --warn: #f08a72;
+  --c-concert: #b394ff; --c-fansign: #f37aa8; --c-fanmeeting: #d89ac4; --c-music: #78a8f5; --c-campus: #5ccdb7; --c-festival: #f0a35a; --c-event: #b8c85a; --c-musical: #e88585; --c-etc: #93a199;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 28px 16px 64px; display: flex; flex-direction: column; gap: 20px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 헤더 */
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.top h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 30px; letter-spacing: -0.5px; }
+.top h1 span { color: var(--accent); }
+.sync { font-size: 12px; color: var(--muted); font-family: var(--f-num); }
+
+/* 누적 티켓 */
+.ticket { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; display: grid; grid-template-columns: minmax(0, 1fr) auto; overflow: hidden; }
+.ticket-main { padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ticket-stub { border-left: 2px dashed var(--line); padding: 22px 20px; display: flex; flex-direction: column; justify-content: center; gap: 12px; min-width: 132px; position: relative; }
+.ticket-stub::before, .ticket-stub::after { content: ""; position: absolute; left: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); }
+.ticket-stub::before { top: -11px; }
+.ticket-stub::after { bottom: -11px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--muted); }
+.big { display: flex; align-items: baseline; gap: 6px; }
+.big b { font-family: var(--f-display); font-weight: 400; font-size: 64px; line-height: 0.9; color: var(--accent); font-variant-numeric: tabular-nums; }
+.big span { font-family: var(--f-display); font-size: 24px; }
+.years { display: flex; gap: 8px; flex-wrap: wrap; }
+.yr { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 6px 12px; display: flex; gap: 8px; align-items: baseline; }
+.yr[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.yr small { color: var(--muted); font-size: 12px; }
+.yr b { font-family: var(--f-num); font-size: 15px; font-variant-numeric: tabular-nums; }
+.cats { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.cats i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.cats b { color: var(--fg); font-family: var(--f-num); font-weight: 600; margin-left: 4px; }
+.stat small { display: block; font-size: 12px; color: var(--muted); }
+.stat b { font-family: var(--f-num); font-size: 18px; font-variant-numeric: tabular-nums; }
+
+/* 필터 */
+.bar { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.search { flex: 1 1 180px; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 12px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn { border: 0; border-radius: 10px; padding: 9px 14px; font-weight: 600; background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 500; }
+.btn.danger { background: transparent; color: var(--warn); border: 1px solid var(--line); font-weight: 500; }
+
+/* 목록 */
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.group-h { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 18px 6px; font-family: var(--f-display); font-size: 18px; position: sticky; top: env(safe-area-inset-top, 0px); background: var(--surface); z-index: 1; }
+.group-h small { font-family: var(--f-num); font-size: 12px; color: var(--muted); }
+.group-h.upcoming { color: var(--accent); }
+.row { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: start; border-top: 1px solid var(--line); }
+.group-h + .row { border-top: 0; }
+.check { width: 44px; height: 48px; display: grid; place-items: center; background: none; border: 0; padding: 0; }
+.check span { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; transition: background .15s, border-color .15s; }
+.check:hover span { border-color: var(--accent); }
+.check svg { width: 14px; height: 14px; opacity: 0; }
+.row.done .check span { background: var(--accent); border-color: var(--accent); }
+.row.done .check svg { opacity: 1; }
+.body { padding: 12px 16px 12px 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; cursor: pointer; }
+.line1 { display: flex; gap: 10px; align-items: baseline; min-width: 0; }
+.date { font-family: var(--f-num); font-size: 13px; color: var(--muted); flex: none; font-variant-numeric: tabular-nums; }
+.title { min-width: 0; overflow-wrap: anywhere; }
+.row.done .title { font-weight: 600; }
+.tag { flex: none; font-size: 11px; padding: 1px 7px; border-radius: 6px; border: 1px solid currentColor; margin-left: auto; white-space: nowrap; }
+.meta { font-size: 13px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; padding-left: 58px; }
+.meta .stars { color: var(--star); letter-spacing: 1px; }
+.meta .memo { font-family: var(--f-memo); color: var(--fg); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.soon { font-size: 11px; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 0 6px; flex: none; }
+
+/* 상세(일기) */
+.detail { grid-column: 2; padding: 4px 16px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label, .field > .lab { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+.inline { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+.wait { display: flex; align-items: center; gap: 6px; }
+.wait input { width: 84px; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 7px 10px; font-family: var(--f-num); }
+.rate { display: flex; gap: 2px; }
+.rate button { background: none; border: 0; font-size: 24px; line-height: 1; padding: 2px; color: var(--line); }
+.rate button.on { color: var(--star); }
+.detail textarea { width: 100%; min-height: 96px; resize: vertical; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px; font-family: var(--f-memo); font-size: 15px; line-height: 1.7; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.actions a { color: var(--accent); font-size: 13px; margin-right: auto; }
+.saved { font-size: 12px; color: var(--muted); }
+
+.empty { padding: 36px 20px; text-align: center; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+.empty b { font-family: var(--f-display); font-weight: 400; font-size: 20px; color: var(--fg); }
+.more { width: 100%; background: none; border: 0; border-top: 1px solid var(--line); padding: 12px; color: var(--accent); font-size: 14px; }
+.foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.foot button { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 0; }
+.notice { background: var(--accent-soft); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+
+/* 추가 폼 */
+.addpanel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.modes { display: flex; gap: 6px; flex-wrap: wrap; }
+.addform { display: grid; grid-template-columns: 150px minmax(0, 1fr) 130px; gap: 10px; align-items: end; }
+.fspanel { display: flex; flex-direction: column; gap: 14px; }
+.fspanel .hint { margin: 0; font-size: 13px; color: var(--muted); }
+.steppers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.step { border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.step small { font-size: 12px; color: var(--muted); }
+.step div { display: flex; align-items: center; gap: 10px; }
+.step b { font-family: var(--f-num); font-size: 22px; min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; }
+.step button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 18px; line-height: 1; }
+.step button:disabled { opacity: .35; cursor: default; }
+.fspanel textarea { width: 100%; min-height: 64px; resize: vertical; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px; font-family: var(--f-memo); font-size: 15px; }
+.fsnote { background: none; border: 0; padding: 0; color: var(--c-fansign); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.addform input, .addform select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+.addform .actions { grid-column: 1 / -1; justify-content: flex-end; }
+
+@media (max-width: 560px) {
+  .ticket { grid-template-columns: 1fr; }
+  .ticket-stub { border-left: 0; border-top: 2px dashed var(--line); flex-direction: row; flex-wrap: wrap; gap: 20px; }
+  .ticket-stub::before, .ticket-stub::after { top: -11px; bottom: auto; }
+  .ticket-stub::before { left: -11px; }
+  .ticket-stub::after { left: auto; right: -11px; }
+  .big b { font-size: 52px; }
+  .meta { padding-left: 0; }
+  .line1 { flex-wrap: wrap; row-gap: 2px; }
+  .tag { margin-left: 0; }
+  .addform { grid-template-columns: 1fr; }
+  .steppers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>프나 오프 일지 <span>☘</span></h1>
+    <div class="sync" id="sync">캘린더 불러오는 중…</div>
+  </header>
+
+  <section class="ticket" aria-label="오프 누적 기록">
+    <div class="ticket-main">
+      <div>
+        <div class="eyebrow" id="countLabel">2022 – 2026 내가 간 오프</div>
+        <div class="big"><b id="total">0</b><span>회</span></div>
+      </div>
+      <div class="years" id="years"></div>
+      <div class="cats" id="cats"></div>
+    </div>
+    <div class="ticket-stub">
+      <div class="stat"><small>총 대기 시간</small><b id="waitSum">–</b></div>
+      <div class="stat"><small>평균 만족도</small><b id="rateAvg">–</b></div>
+      <div class="stat"><small>최근 오프</small><b id="last" style="font-size:14px">–</b></div>
+    </div>
+  </section>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="bar" aria-label="필터">
+    <div class="bar-row">
+      <input class="search" id="q" type="search" placeholder="일정 검색 (예: 축제, 앵콜콘)">
+      <button class="chip" id="onlyDone" aria-pressed="false">간 곳만</button>
+      <button class="btn" id="addBtn">+ 오프 추가</button>
+    </div>
+    <div class="bar-row" id="catFilter"></div>
+  </section>
+
+  <section class="addpanel" id="addPanel" hidden aria-label="오프 추가">
+  <div class="modes">
+    <button type="button" class="chip" data-mode="event" aria-pressed="true">날짜별 일정</button>
+    <button type="button" class="chip" data-mode="count" aria-pressed="false">팬싸 횟수만</button>
+  </div>
+  <form class="addform" id="addform">
+    <div class="field"><label for="addDate">날짜</label><input id="addDate" type="date" min="2022-01-01" max="2026-12-31" required></div>
+    <div class="field"><label for="addTitle">일정 이름</label><input id="addTitle" type="text" maxlength="80" placeholder="예: 미니 팬싸 (영등포)" required></div>
+    <div class="field"><label for="addCat">종류</label><select id="addCat"></select></div>
+    <div class="actions"><button type="button" class="btn ghost" id="addCancel">취소</button><button class="btn" type="submit">추가하고 체크</button></div>
+  </form>
+  <div class="fspanel" id="fsPanel" hidden>
+    <p class="hint">날짜가 기억나지 않는 팬싸는 연도별 횟수만 적어 두세요. 총 횟수와 팬싸 횟수에 더해져요.</p>
+    <div class="steppers" id="steppers"></div>
+    <div class="field"><label for="fsMemo">메모</label><textarea id="fsMemo" maxlength="2000" placeholder="예: 24년 미니 팬싸 2번, 25년엔 대면 팬싸만…"></textarea></div>
+    <div class="actions"><span class="saved" id="fsSaved" style="margin-right:auto"></span><button type="button" class="btn ghost" id="fsClose">닫기</button></div>
+  </div>
+  </section>
+
+  <section class="list" id="list" aria-live="polite">
+    <div class="empty"><b>오프 일정을 불러오는 중이에요</b><span>캘린더에서 고른 2022~2026년 콘서트·축제·음방·팬싸가 여기 나타나요.</span></div>
+  </section>
+
+  <footer class="foot">
+    <span>동그라미를 누르면 1회 추가 · 제목을 누르면 대기 시간·만족도·메모를 적을 수 있어요 · 음방은 사녹과 본방을 따로 세요</span>
+    <button id="toggleHidden">숨긴 일정 보기</button>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const CATS = {
+    concert: "콘서트", fansign: "팬싸", fanmeeting: "팬미팅", music: "음악방송", campus: "대학 축제",
+    festival: "페스티벌", event: "행사", musical: "뮤지컬", etc: "기타",
+  };
+  const YEARS = ["2022", "2023", "2024", "2025", "2026"];
+  const DOW = ["일", "월", "화", "수", "목", "금", "토"];
+  const CHECK = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+  const $ = (id) => document.getElementById(id);
+
+  let calEvents = {};   // 캘린더에서 온 일정
+  let custom = {};      // 직접 추가한 일정
+  let logs = {};        // 체크·메모 기록
+  let syncedAt = null;
+  let fs = {};          // 날짜 모르는 팬싸 횟수 {y2022 … y2026, unknown, memo}
+  let fsTimer = null;
+  const FS_KEYS = [["y2022", "2022년"], ["y2023", "2023년"], ["y2024", "2024년"], ["y2025", "2025년"], ["y2026", "2026년"], ["unknown", "연도 모름"]];
+  const fsOf = (year) => year === "all" ? FS_KEYS.reduce((a, [k]) => a + (Number(fs[k]) || 0), 0) : Number(fs["y" + year]) || 0;
+  let loaded = { cal: false, logs: false };
+  const ui = { year: "all", cat: "all", onlyDone: false, q: "", open: null, showHidden: false, upcomingAll: false };
+  let db = null;
+
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const catColor = (c) => `var(--c-${CATS[c] ? c : "etc"})`;
+
+  function allEvents() {
+    const out = [];
+    for (const [id, e] of Object.entries(calEvents)) {
+      out.push({ id, ...e, src: "cal", o: 1 });
+      // 음악방송 본방 중 사녹도 있었던 날은 '사녹' 항목을 하나 더 만든다 (체크·메모 따로)
+      if (e.k === "live" && hasPrerec(id)) {
+        out.push({ id: id + "-sanok", d: e.sd || e.d, t: e.t.replace(/ 본방$/, "") + " 사녹", c: "music", u: e.u, src: "sanok", parent: id, o: 0 });
+      }
+    }
+    for (const [id, e] of Object.entries(custom)) out.push({ id, ...e, src: "me" });
+    return out;
+  }
+  const logOf = (id) => logs[id] || {};
+  const hasPrerec = (id) => !!(calEvents[id] && calEvents[id].s);
+  const isHidden = (id) => !!logOf(id.endsWith("-sanok") ? id.slice(0, -6) : id).hidden;
+  const isDone = (id) => !!logOf(id).done;
+
+  function fmtDate(d) {
+    const dt = new Date(d + "T00:00:00");
+    return `${d.slice(5, 7)}.${d.slice(8, 10)} (${DOW[dt.getDay()]})`;
+  }
+  function fmtHours(h) {
+    if (!h) return "–";
+    return (Math.round(h * 10) / 10) + "시간";
+  }
+
+  /* ---------- 통계 ---------- */
+  function renderStats(evs) {
+    const done = evs.filter((e) => isDone(e.id) && !isHidden(e.id));
+    const inYear = ui.year === "all" ? done : done.filter((e) => e.d.startsWith(ui.year));
+    const extra = fsOf(ui.year);
+    $("total").textContent = inYear.length + extra;
+    $("countLabel").textContent = ui.year === "all" ? "2022 – 2026 내가 간 오프" : `${ui.year}년에 간 오프`;
+
+    $("years").innerHTML = [["all", "전체", done.length + fsOf("all")], ...YEARS.map((y) => [y, y, done.filter((e) => e.d.startsWith(y)).length + fsOf(y)])]
+      .map(([k, label, n]) => `<button class="yr" data-year="${k}" aria-pressed="${ui.year === k}"><small>${label}</small><b>${n}</b></button>`).join("");
+
+    const byCat = {};
+    inYear.forEach((e) => { byCat[e.c] = (byCat[e.c] || 0) + 1; });
+    if (extra) byCat.fansign = (byCat.fansign || 0) + extra;
+    const catKeys = Object.keys(CATS).filter((c) => byCat[c]);
+    $("cats").innerHTML = catKeys.length
+      ? catKeys.map((c) => `<span><i style="background:${catColor(c)}"></i>${CATS[c]}<b>${byCat[c]}</b></span>`).join("")
+      : `<span>아직 체크한 오프가 없어요. 다녀온 일정의 동그라미를 눌러보세요.</span>`;
+    if (extra) $("cats").insertAdjacentHTML("beforeend", `<button class="fsnote" data-act="openFs">날짜 모르는 팬싸 ${extra}회 포함</button>`);
+
+    const waits = inYear.map((e) => Number(logOf(e.id).wait) || 0);
+    const waitSum = waits.reduce((a, b) => a + b, 0);
+    $("waitSum").textContent = waitSum ? fmtHours(waitSum) : "–";
+    const rates = inYear.map((e) => Number(logOf(e.id).rating) || 0).filter(Boolean);
+    $("rateAvg").textContent = rates.length ? "★ " + (rates.reduce((a, b) => a + b, 0) / rates.length).toFixed(1) : "–";
+    const last = inYear.filter((e) => e.d <= today).sort((a, b) => b.d.localeCompare(a.d))[0];
+    $("last").title = last ? last.t : "";
+    $("last").textContent = last ? `${last.d.slice(2).replaceAll("-", ".")} ${last.t.length > 10 ? last.t.slice(0, 10) + "…" : last.t}` : "–";
+  }
+
+  /* ---------- 목록 ---------- */
+  function rowHtml(e) {
+    const L = logOf(e.id);
+    const done = !!L.done;
+    const metaBits = [];
+    if (L.wait) metaBits.push(`<span>⏱ 대기 ${esc(fmtHours(Number(L.wait)))}</span>`);
+    if (L.rating) metaBits.push(`<span class="stars" aria-label="만족도 ${L.rating}점">${"★".repeat(L.rating)}${"☆".repeat(5 - L.rating)}</span>`);
+    if (L.memo) metaBits.push(`<span class="memo">${esc(L.memo.split("\n")[0])}</span>`);
+    const open = ui.open === e.id;
+    const future = e.d > today;
+    return `<div class="row${done ? " done" : ""}" data-id="${esc(e.id)}">
+      <button class="check" data-act="toggle" aria-label="${esc(e.t)} ${done ? "체크 해제" : "다녀옴으로 체크"}" aria-pressed="${done}"><span>${CHECK}</span></button>
+      <div class="body" data-act="open" role="button" tabindex="0" aria-expanded="${open}">
+        <div class="line1">
+          <span class="date">${fmtDate(e.d)}</span>
+          <span class="title">${esc(e.t)}</span>
+          ${future && !done ? '<span class="soon">예정</span>' : ""}
+          <span class="tag" style="color:${catColor(e.c)}">${esc(CATS[e.c] || "기타")}</span>
+        </div>
+        ${metaBits.length ? `<div class="meta">${metaBits.join("")}</div>` : ""}
+      </div>
+      ${open ? detailHtml(e, L) : ""}
+    </div>`;
+  }
+
+  function detailHtml(e, L) {
+    const r = Number(L.rating) || 0;
+    return `<div class="detail" data-id="${esc(e.id)}">
+      <div class="inline">
+        <div class="field"><label for="wait-${esc(e.id)}">대기 시간</label>
+          <div class="wait"><input id="wait-${esc(e.id)}" data-field="wait" type="number" min="0" max="72" step="0.5" inputmode="decimal" value="${L.wait ?? ""}" placeholder="0"><span>시간</span></div></div>
+        <div class="field"><span class="lab">만족도</span>
+          <div class="rate" role="radiogroup" aria-label="만족도">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-rate="${n}" class="${n <= r ? "on" : ""}" role="radio" aria-checked="${n === r}" aria-label="${n}점">★</button>`).join("")}</div></div>
+      </div>
+      <div class="field"><label for="memo-${esc(e.id)}">메모</label>
+        <textarea id="memo-${esc(e.id)}" data-field="memo" maxlength="2000" placeholder="자리, 동행, 기억에 남는 순간, 다음엔 이렇게…">${esc(L.memo || "")}</textarea></div>
+      <div class="actions">
+        ${e.u ? `<a href="${esc(e.u)}" target="_blank" rel="noopener">관련 링크 열기 ↗</a>` : '<span style="margin-right:auto"></span>'}
+        <span class="saved" id="saved-${esc(e.id)}"></span>
+        ${e.src === "me"
+          ? `<button type="button" class="btn danger" data-act="remove">이 일정 삭제</button>`
+          : e.src === "sanok"
+            ? ""
+            : `<button type="button" class="btn ghost" data-act="hide">${L.hidden ? "다시 보이기" : "오프 아님 · 숨기기"}</button>`}
+      </div>
+    </div>`;
+  }
+
+  function renderList() {
+    const list = $("list");
+    if (!db) return;
+    if (!loaded.cal && !Object.keys(custom).length) return;
+
+    const evs = allEvents();
+    renderStats(evs);
+
+    const q = ui.q.trim().toLowerCase();
+    let shown = evs.filter((e) => {
+      if (ui.showHidden ? !isHidden(e.id) : isHidden(e.id)) return false;
+      if (ui.year !== "all" && !e.d.startsWith(ui.year)) return false;
+      if (ui.cat !== "all" && e.c !== ui.cat) return false;
+      if (ui.onlyDone && !isDone(e.id)) return false;
+      if (q && !(e.t.toLowerCase().includes(q) || (logOf(e.id).memo || "").toLowerCase().includes(q))) return false;
+      return true;
+    });
+
+    if (!shown.length) {
+      list.innerHTML = `<div class="empty"><b>${ui.showHidden ? "숨긴 일정이 없어요" : ui.onlyDone ? "아직 체크한 오프가 없어요" : "조건에 맞는 일정이 없어요"}</b><span>${ui.onlyDone ? "'간 곳만'을 끄고 다녀온 일정을 체크해 보세요." : "필터를 바꾸거나 '+ 오프 추가'로 직접 넣을 수 있어요."}</span></div>`;
+      return;
+    }
+
+    const sameDay = (a, b) => (a.o ?? 1) - (b.o ?? 1) || a.t.localeCompare(b.t);
+    const upcoming = shown.filter((e) => e.d > today).sort((a, b) => a.d.localeCompare(b.d) || sameDay(a, b));
+    const past = shown.filter((e) => e.d <= today).sort((a, b) => b.d.localeCompare(a.d) || sameDay(a, b));
+    let html = "";
+
+    if (upcoming.length) {
+      const limit = ui.upcomingAll ? upcoming.length : 4;
+      html += `<div class="group-h upcoming">다가오는 오프<small>${upcoming.length}개</small></div>`;
+      html += upcoming.slice(0, limit).map(rowHtml).join("");
+      if (upcoming.length > 4) html += `<button class="more" data-act="moreUpcoming">${ui.upcomingAll ? "접기" : `예정 ${upcoming.length - 4}개 더 보기`}</button>`;
+    }
+
+    let curMonth = "";
+    for (const e of past) {
+      const m = e.d.slice(0, 7);
+      if (m !== curMonth) {
+        curMonth = m;
+        const inMonth = past.filter((x) => x.d.startsWith(m));
+        const n = inMonth.filter((x) => isDone(x.id)).length;
+        html += `<div class="group-h">${m.slice(0, 4)}년 ${Number(m.slice(5))}월<small>${n} / ${inMonth.length}</small></div>`;
+      }
+      html += rowHtml(e);
+    }
+    list.innerHTML = html;
+  }
+
+  function renderCatFilter() {
+    $("catFilter").innerHTML = [["all", "전체 종류"], ...Object.entries(CATS)]
+      .map(([k, label]) => `<button class="chip" data-cat="${k}" aria-pressed="${ui.cat === k}">${k !== "all" ? `<i style="background:${catColor(k)}"></i>` : ""}${label}</button>`).join("");
+    $("addCat").innerHTML = Object.entries(CATS).map(([k, l]) => `<option value="${k}"${k === "fansign" ? " selected" : ""}>${l}</option>`).join("");
+  }
+
+  function renderSync() {
+    if (!syncedAt) return;
+    const d = new Date(syncedAt);
+    const s = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+    $("sync").textContent = `캘린더 갱신 ${s} · 매일 오전 9시`;
+  }
+
+  function render() { renderList(); }
+
+  /* ---------- 저장 ---------- */
+  const queues = {};
+  const timers = {};
+  function persistLog(id) {
+    const body = { ...logOf(id), at: new Date().toISOString() };
+    const prev = queues[id] || Promise.resolve();
+    const savedEl = () => $("saved-" + id);
+    queues[id] = prev.then(() => db.collection("logs").doc(id).set(body))
+      .then(() => { const el = savedEl(); if (el) el.textContent = "저장됨"; })
+      .catch((err) => {
+        const el = savedEl();
+        if (el) el.textContent = "저장 실패";
+        showNotice(err && err.code === "quota_exceeded" ? "저장 공간이 가득 찼어요. 숨긴 일정 기록을 정리해 주세요." : "기록을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      });
+  }
+  function patchLog(id, patch, delay = 0) {
+    logs[id] = { ...logOf(id), ...patch };
+    clearTimeout(timers[id]);
+    if (delay) {
+      const el = $("saved-" + id); if (el) el.textContent = "입력 중…";
+      timers[id] = setTimeout(() => persistLog(id), delay);
+    } else persistLog(id);
+  }
+  function showNotice(msg) { const n = $("notice"); n.textContent = msg; n.hidden = !msg; }
+
+  /* ---------- 이벤트 ---------- */
+  document.addEventListener("click", async (ev) => {
+    const t = ev.target.closest("[data-act],[data-year],[data-cat],[data-rate]");
+    if (!t) return;
+    if (t.dataset.year) { ui.year = t.dataset.year; return render(); }
+    if (t.dataset.cat) { ui.cat = t.dataset.cat; renderCatFilter(); return render(); }
+    const row = t.closest("[data-id]");
+    const id = row && row.dataset.id;
+    if (t.dataset.rate) {
+      const n = Number(t.dataset.rate);
+      patchLog(id, { rating: Number(logOf(id).rating) === n ? 0 : n });
+      return render();
+    }
+    switch (t.dataset.act) {
+      case "toggle": {
+        const done = !isDone(id);
+        patchLog(id, { done, doneAt: done ? new Date().toISOString() : null });
+        return render();
+      }
+      case "open": ui.open = ui.open === id ? null : id; render();
+        if (ui.open) { const ta = $("memo-" + id); if (ta && !logOf(id).memo) ta.focus({ preventScroll: true }); }
+        return;
+      case "hide": patchLog(id, { hidden: !isHidden(id) }); ui.open = null; return render();
+      case "remove": {
+        if (t.dataset.confirm !== "1") { t.dataset.confirm = "1"; t.textContent = "한 번 더 누르면 삭제"; return; }
+        delete custom[id]; delete logs[id]; ui.open = null; render();
+        try { await db.collection("custom").doc(id).delete(); await db.collection("logs").doc(id).delete(); }
+        catch { showNotice("삭제하지 못했어요. 새로고침 후 다시 시도해 주세요."); }
+        return;
+      }
+      case "openFs": return openPanel("count");
+      case "moreUpcoming": ui.upcomingAll = !ui.upcomingAll; return render();
+    }
+  });
+  document.addEventListener("keydown", (ev) => {
+    if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches(".body[data-act='open']")) { ev.preventDefault(); ev.target.click(); }
+  });
+  document.addEventListener("input", (ev) => {
+    const f = ev.target.dataset && ev.target.dataset.field;
+    if (!f) return;
+    const id = ev.target.closest("[data-id]").dataset.id;
+    const val = f === "wait" ? (ev.target.value === "" ? null : Math.max(0, Number(ev.target.value))) : ev.target.value;
+    patchLog(id, { [f]: val }, 700);
+  });
+  document.addEventListener("focusout", (ev) => {
+    if (ev.target.dataset && ev.target.dataset.field) { const id = ev.target.closest("[data-id]").dataset.id; if (timers[id]) { clearTimeout(timers[id]); timers[id] = null; persistLog(id); } }
+  });
+
+  $("q").addEventListener("input", (e) => { ui.q = e.target.value; render(); });
+  $("onlyDone").addEventListener("click", (e) => { ui.onlyDone = !ui.onlyDone; e.currentTarget.setAttribute("aria-pressed", ui.onlyDone); render(); });
+  $("toggleHidden").addEventListener("click", (e) => { ui.showHidden = !ui.showHidden; e.currentTarget.textContent = ui.showHidden ? "전체 일정으로 돌아가기" : "숨긴 일정 보기"; render(); });
+  function setMode(mode) {
+    document.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.mode === mode));
+    $("addform").hidden = mode !== "event";
+    $("fsPanel").hidden = mode !== "count";
+    if (mode === "event") { $("addDate").value = $("addDate").value || (today <= "2026-12-31" ? today : ""); $("addTitle").focus(); }
+    else renderFs();
+  }
+  function openPanel(mode) { $("addPanel").hidden = false; setMode(mode); $("addPanel").scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+  $("addBtn").addEventListener("click", () => { if ($("addPanel").hidden) openPanel("event"); else $("addPanel").hidden = true; });
+  document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+  $("addCancel").addEventListener("click", () => { $("addPanel").hidden = true; });
+  $("fsClose").addEventListener("click", () => { $("addPanel").hidden = true; });
+
+  /* ---------- 날짜 모르는 팬싸 ---------- */
+  function renderFs() {
+    $("steppers").innerHTML = FS_KEYS.map(([k, label]) => {
+      const n = Number(fs[k]) || 0;
+      return `<div class="step"><small>${label}</small><div>
+        <button type="button" data-fs="${k}" data-d="-1" aria-label="${label} 팬싸 1회 빼기"${n ? "" : " disabled"}>−</button>
+        <b>${n}</b>
+        <button type="button" data-fs="${k}" data-d="1" aria-label="${label} 팬싸 1회 더하기">+</button></div></div>`;
+    }).join("");
+    if (document.activeElement !== $("fsMemo")) $("fsMemo").value = fs.memo || "";
+  }
+  function saveFs(delay) {
+    clearTimeout(fsTimer);
+    $("fsSaved").textContent = "저장 중…";
+    fsTimer = setTimeout(async () => {
+      try { await db.doc("extra/fansign").set({ ...fs, at: new Date().toISOString() }); $("fsSaved").textContent = "저장됨"; }
+      catch { $("fsSaved").textContent = "저장 실패"; showNotice("팬싸 횟수를 저장하지 못했어요. 잠시 후 다시 시도해 주세요."); }
+      fsTimer = null;
+    }, delay);
+  }
+  $("steppers").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-fs]");
+    if (!b || !db) return;
+    const k = b.dataset.fs;
+    fs = { ...fs, [k]: Math.max(0, (Number(fs[k]) || 0) + Number(b.dataset.d)) };
+    renderFs(); render(); saveFs(600);
+  });
+  $("fsMemo").addEventListener("input", (e) => { fs = { ...fs, memo: e.target.value }; saveFs(800); });
+  $("addform").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    if (!db) return;
+    const d = $("addDate").value, t = $("addTitle").value.trim(), c = $("addCat").value;
+    if (!d || !t) return;
+    const ref = db.collection("custom").doc();
+    const id = ref.id;
+    custom[id] = { d, t, c };
+    logs[id] = { done: true, doneAt: new Date().toISOString() };
+    ui.open = id;
+    $("addPanel").hidden = true; $("addTitle").value = "";
+    render();
+    try { await ref.set({ d, t, c }); persistLog(id); }
+    catch { showNotice("일정을 추가하지 못했어요. 잠시 후 다시 시도해 주세요."); }
+  });
+
+  /* ---------- 저장소 연결 ---------- */
+  renderCatFilter();
+  async function start() {
+    db = window.claude && window.claude.use ? await window.claude.use("db") : null;
+    if (!db) {
+      $("list").innerHTML = `<div class="empty"><b>기록 저장소에 연결할 수 없어요</b><span>claude.ai에 로그인한 상태로 이 페이지를 열면 오프 일정과 체크 기록이 나타나요.</span></div>`;
+      $("sync").textContent = "연결 안 됨";
+      return;
+    }
+    db.doc("cal/events").onSnapshot((snap) => {
+      const data = snap.exists ? snap.data() : null;
+      calEvents = (data && data.events) || {};
+      syncedAt = data && data.syncedAt;
+      loaded.cal = true;
+      renderSync();
+      if (!data) $("list").innerHTML = `<div class="empty"><b>아직 캘린더를 가져오지 않았어요</b><span>매일 오전 9시에 프로미스나인 캘린더에서 오프 일정을 가져와요. 그 전에도 '+ 오프 추가'로 직접 넣을 수 있어요.</span></div>`;
+      else render();
+    }, () => showNotice("캘린더 일정을 불러오지 못했어요. 새로고침해 주세요."));
+    db.collection("logs").limit(1000).onSnapshot((snap) => {
+      const next = {};
+      snap.docs.forEach((d) => { next[d.id] = d.data(); });
+      // 입력 중인 칸은 덮어쓰지 않도록, 열린 일정의 로컬 값은 유지
+      if (ui.open && logs[ui.open] && timers[ui.open]) next[ui.open] = logs[ui.open];
+      logs = next; loaded.logs = true;
+      const active = document.activeElement;
+      if (!(active && active.dataset && active.dataset.field)) render();
+    }, () => showNotice("체크 기록을 불러오지 못했어요. 새로고침해 주세요."));
+    db.doc("extra/fansign").onSnapshot((snap) => {
+      if (fsTimer) return; // 아직 저장 전인 내 입력이 우선
+      fs = snap.exists ? { ...snap.data() } : {};
+      renderFs();
+      const active = document.activeElement;
+      if (!(active && active.dataset && active.dataset.field)) render();
+    });
+    db.collection("custom").limit(1000).onSnapshot((snap) => {
+      const next = {};
+      snap.docs.forEach((d) => { next[d.id] = d.data(); });
+      custom = next;
+      const active = document.activeElement;
+      if (!(active && active.dataset && active.dataset.field)) render();
+    });
+  }
+  start();
+})();
+</script>

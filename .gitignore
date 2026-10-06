@@ -1,0 +1,5 @@
+out/
+__pycache__/
+*.json
+!docs/events.json
+.claude/
