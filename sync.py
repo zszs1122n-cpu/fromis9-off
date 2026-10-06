@@ -95,8 +95,9 @@ TWO_SHOWS = [
 ]
 
 # 사녹이 있었던 활동 주차 (사용자 확인). 활동 첫 음방이 있는 주(월~일)가 1주차.
-# 값이 None이면 그 주의 모든 음방에 사녹, 집합이면 그 방송에만 사녹.
+# 키는 연도 또는 활동명(활동명이 먼저). 값이 None이면 그 주의 모든 음방에 사녹, 집합이면 그 방송에만 사녹.
 PREREC_WEEKS = {
+    "#menow": {1: None, 2: None},
     "2024": {1: None, 2: None},
     "2025": {1: None},
     "2026": {1: None, 2: {"뮤직뱅크", "쇼! 음악중심"}},
@@ -194,7 +195,7 @@ def group_music(events: dict, descs: dict):
                 del events[k]
             continue
         prefix = f"[{act}] " if act else ""
-        rule = PREREC_WEEKS.get(g["first"][:4], {})
+        rule = PREREC_WEEKS.get(act) or PREREC_WEEKS.get(g["first"][:4], {})
         for k, e in g["items"]:
             week = (datetime.fromisoformat(e["d"]) - g["monday"]).days // 7 + 1
             e["t"] = f"{prefix}{week}주차 {e['n']} 본방"
