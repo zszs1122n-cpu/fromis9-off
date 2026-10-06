@@ -314,7 +314,7 @@ body { margin: 0; }
     <summary><b>멤버 본 시간 추정치</b><span class="sum" id="seeBoxSum"></span></summary>
     <div class="budget-body">
       <div class="brk" id="seeBrk"></div>
-      <p class="hint">공연·행사 길이로 잡은 추정치예요. 미팬은 2023–24년 20분, 2025년부터 40분으로 계산해요. 일정 제목을 눌러 실제로 본 시간을 적으면 그 일정은 적은 값으로 바뀌어요.</p>
+      <p class="hint">공연·행사 길이로 잡은 추정치예요. 미팬은 LIKE YOU BETTER 활동까지 20분, 하얀 그리움 활동부터 40분으로 계산해요. 일정 제목을 눌러 실제로 본 시간을 적으면 그 일정은 적은 값으로 바뀌어요.</p>
       <div class="actions"><button type="button" class="btn ghost" data-cfg-btn="see">기본값 바꾸기</button></div>
       <div class="cfg" id="cfg-see" hidden>
         <div class="cfg-grid" id="cfgGrid-see"></div>
@@ -402,11 +402,11 @@ body { margin: 0; }
     wait: { concert: 2, overseas: 2, soundcheck: 2.5, fansign: 1, fanmeeting: 2, fanevent: 2, popup: 1, sanok: 4, music: 4, minifm: 1, campus: 3, festival: 3, event: 3, musical: 2, etc: 0 },
     cost: { concert: 250000, overseas: 1000000, soundcheck: 0, fansign: null, fanmeeting: 70000, fanevent: 50000, popup: 50000, sanok: 10000, music: 10000, minifm: 0, campus: 10000, festival: 25000, event: 25000, musical: 150000, etc: 0 },
     album: 50000,
-    // 멤버를 본 시간(분): 공연·행사 길이. 미팬은 연도마다 달라서 SEE_EARLY로 따로
+    // 멤버를 본 시간(분): 공연·행사 길이. 미팬은 활동마다 달라서 SEE_EARLY로 따로
     see: { concert: 150, overseas: 150, soundcheck: 25, fansign: 90, fanmeeting: 150, fanevent: 120, popup: 20, sanok: 20, music: 10, minifm: 40, campus: 25, festival: 20, event: 20, musical: 150, etc: 0 },
   };
-  // 미팬은 2023–24년엔 20분, 2025년부터 40분
-  const SEE_EARLY = { minifm: ["2025", 20] };
+  // [이 날짜 전엔, 몇 분, 바뀐 활동]: 미팬은 하얀 그리움(2025-12-06) 전엔 20분, 그 뒤로 40분
+  const SEE_EARLY = { minifm: ["2025-12-06", 20, "하얀 그리움"] };
   const COST_NOTE = { sanok: "교통비", music: "교통비", campus: "교통비", festival: "약 2~3만원", event: "약 2~3만원", overseas: "항공·숙소·티켓", soundcheck: "본공연에 포함", popup: "MD 구매", fansign: "직접 적기" };
   // 본 일정에 딸린 종류(사첵·미팬): 기본으로 오프 횟수에서 빼고 대기·본 시간·비용에만 더한다. 체크하면 횟수에도 넣음
   const ADDON = { soundcheck: "사첵", minifm: "미팬" };
@@ -697,7 +697,7 @@ body { margin: 0; }
       const b = byCat[c];
       if (!b) continue;
       const early = SEE_EARLY[c];
-      const bits = [early && !(cfg.see && cfg.see[c] != null) ? `기본 ${fmtMin(early[1])} (${+early[0] - 1}년까지) · ${fmtMin(DEF.see[c])} (${early[0]}년부터)` : `기본 ${fmtMin(seeDef(c))}`];
+      const bits = [early && !(cfg.see && cfg.see[c] != null) ? `기본 ${fmtMin(early[1])} · ${early[2]}부터 ${fmtMin(DEF.see[c])}` : `기본 ${fmtMin(seeDef(c))}`];
       if (b.own) bits.push(`직접 적은 ${b.own}회`);
       rows.push(`<div class="brk-row"><span><i style="background:${catColor(c)}"></i>${CATS[c]} ${b.n}회</span><b>${fmtMin(b.sum)}</b><small>${bits.join(" · ")}</small></div>`);
     }
