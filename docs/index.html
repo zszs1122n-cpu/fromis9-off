@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>프나 오프 일지</title>
-<meta name="description" content="로그인 없이 쓰는 프로미스나인 오프 기록장. 2022~2026 콘서트·팬싸·음방·축제를 체크하고 대기 시간과 메모를 남겨요.">
+<meta name="description" content="로그인 없이 쓰는 프로미스나인 오프 기록장. 2017~2026 콘서트·팬싸·음방·축제를 체크하고 대기 시간과 메모를 남겨요.">
 <meta property="og:title" content="프나 오프 일지 ☘">
 <meta property="og:description" content="로그인 없이 쓰는 프로미스나인 오프 기록장. 다녀온 오프를 체크하면 누적 횟수가 쌓여요.">
 <meta property="og:type" content="website">
@@ -265,7 +265,7 @@ body { margin: 0; }
     <div class="ticket-main">
       <div class="head-row">
         <div>
-          <div class="eyebrow" id="countLabel">2022 – 2026 내가 간 오프</div>
+          <div class="eyebrow" id="countLabel">2017 – 2026 내가 간 오프</div>
           <div class="big"><b id="total">0</b><span>회</span></div>
         </div>
         <div class="badges" id="badges" aria-label="받은 업적"></div>
@@ -327,7 +327,7 @@ body { margin: 0; }
     <button type="button" class="chip" data-mode="event" aria-pressed="false">날짜별 팬싸</button>
   </div>
   <form class="addform" id="addform">
-    <div class="field"><label for="addDate">날짜</label><input id="addDate" type="date" min="2022-01-01" max="2026-12-31" required></div>
+    <div class="field"><label for="addDate">날짜</label><input id="addDate" type="date" min="2017-01-01" max="2026-12-31" required></div>
     <div class="field"><label for="addTitle">일정 이름</label><input id="addTitle" type="text" maxlength="80" placeholder="예: 미니 팬싸 (영등포)" required></div>
     <div class="field"><label for="addCat">종류</label><select id="addCat"></select></div>
     <div class="actions"><button type="button" class="btn ghost" id="addCancel">취소</button><button class="btn" type="submit">추가하고 체크</button></div>
@@ -343,7 +343,7 @@ body { margin: 0; }
   </section>
 
   <section class="list" id="list" aria-live="polite">
-    <div class="empty"><b>오프 일정을 불러오는 중이에요</b><span>캘린더에서 고른 2022~2026년 콘서트·축제·음방·팬싸가 여기 나타나요.</span></div>
+    <div class="empty"><b>오프 일정을 불러오는 중이에요</b><span>2017~2026년 콘서트·축제·음방·팬싸가 여기 나타나요.</span></div>
   </section>
 
   <footer class="foot">
@@ -431,7 +431,7 @@ body { margin: 0; }
     const got = achList().filter((a) => a.top);
     $("badges").innerHTML = got.map((a) => `<span class="badge" style="color:${catColor(a.c)}" title="${esc(a.desc)}"><span>${a.name}</span></span>`).join("");
   }
-  const YEARS = ["2022", "2023", "2024", "2025", "2026"];
+  const YEARS = ["2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"];
   const DOW = ["일", "월", "화", "수", "목", "금", "토"];
   const CHECK = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -442,12 +442,12 @@ body { margin: 0; }
   let custom = {};      // 직접 추가한 일정
   let logs = {};        // 체크·메모 기록
   let syncedAt = null;
-  let fs = {};          // 날짜 모르는 팬싸 횟수 {y2022 … y2026, unknown, cost, memo}
+  let fs = {};          // 날짜 모르는 팬싸 횟수 {y2017 … y2026, unknown, cost, memo}
   let cfg = {};         // 바꾼 기본값 {wait: {cat: h}, cost: {cat: 원}, album: 원}
   const waitDef = (c) => { const v = cfg.wait && cfg.wait[c]; return v != null ? v : DEF.wait[c] ?? 0; };
   const costDef = (c) => { const v = cfg.cost && cfg.cost[c]; return v != null ? v : DEF.cost[c] ?? 0; };
   const albumPrice = () => cfg.album != null ? cfg.album : DEF.album;
-  const FS_KEYS = [["y2022", "2022년"], ["y2023", "2023년"], ["y2024", "2024년"], ["y2025", "2025년"], ["y2026", "2026년"], ["unknown", "연도 모름"]];
+  const FS_KEYS = [...YEARS.map((y) => ["y" + y, y + "년"]), ["unknown", "연도 모름"]];
   const fsOf = (year) => year === "all" ? FS_KEYS.reduce((a, [k]) => a + (Number(fs[k]) || 0), 0) : Number(fs["y" + year]) || 0;
   let loaded = { cal: false, logs: false };
   const ui = { year: "all", cat: "all", onlyDone: false, q: "", open: null, showHidden: false, upcomingAll: false };
@@ -633,7 +633,7 @@ body { margin: 0; }
     const inYear = ui.year === "all" ? done : done.filter((e) => e.d.startsWith(ui.year));
     const extra = fsOf(ui.year);
     $("total").textContent = inYear.length + extra;
-    $("countLabel").textContent = ui.year === "all" ? "2022 – 2026 내가 간 오프" : `${ui.year}년에 간 오프`;
+    $("countLabel").textContent = ui.year === "all" ? "2017 – 2026 내가 간 오프" : `${ui.year}년에 간 오프`;
 
     $("years").innerHTML = [["all", "전체", done.length + fsOf("all")], ...YEARS.map((y) => [y, y, done.filter((e) => e.d.startsWith(y)).length + fsOf(y)])]
       .map(([k, label, n]) => `<button class="yr" data-year="${k}" aria-pressed="${ui.year === k}"><small>${label}</small><b>${n}</b></button>`).join("");

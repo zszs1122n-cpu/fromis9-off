@@ -1,9 +1,11 @@
 """프로미스나인 영상 캘린더(ICS)에서 2022~2026년 '오프' 일정만 골라 events.json으로 저장한다.
+캘린더에 없는 2017~2021년 일정은 history.py에서 합친다.
 
 사용법: python sync.py
 결과: out/events.json  ({"syncedAt": ..., "events": {id: {d, t, c, u}}})
       콘솔에 새로 추가/변경된 일정 요약 출력
 """
+import hashlib
 import io
 import json
 import os
@@ -13,6 +15,8 @@ import urllib.request
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+from history import HISTORY, MUSIC_SHOWS
 
 ICS_URL = (
     "https://calendar.google.com/calendar/ical/"
@@ -53,6 +57,11 @@ SHOWS = [(n, re.compile(p)) for n, p in SHOWS]
 
 # 음방 활동 이름 (활동 첫 음방의 연-월 → 타이틀곡). 없으면 설명란에서 곡명을 찾아 쓴다.
 ACTIVITIES = {
+    "2017-12": "유리구두",
+    "2018-01": "To Heart",
+    "2018-06": "두근두근",
+    "2018-10": "LOVE BOMB",
+    "2019-06": "FUN!",
     "2022-01": "DM",
     "2022-06": "Stay This Way",
     "2023-06": "#menow",
@@ -268,6 +277,17 @@ def main():
             events[uid + "-2"] = {**item, "t": f"{title} 밤공{t2}"}
             item["t"] = f"{title} 낮공{t1}"
             seen.add(uid + "-2")
+
+    # 캘린더에 없는 2017~2021년 일정 (history.py)
+    show_ids = {"뮤직뱅크": "kbs", "쇼! 음악중심": "mbc", "인기가요": "sbs", "엠카운트다운": "mnet", "더쇼": "theshow", "쇼챔피언": "showchamp"}
+    for d, n in MUSIC_SHOWS:
+        k = f"h-{d}-{show_ids[n]}"
+        events[k] = {"d": d, "t": f"{n} 본방", "c": "music", "n": n, "k": "live"}
+        seen.add(k)
+    for d, t, c in HISTORY:
+        k = f"h-{d}-{hashlib.md5(t.encode()).hexdigest()[:8]}"
+        events[k] = {"d": d, "t": t, "c": c}
+        seen.add(k)
 
     group_music(events, descs)
     for k, e in EXTRA_EVENTS.items():
