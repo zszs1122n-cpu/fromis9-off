@@ -354,9 +354,9 @@ body { margin: 0; }
     festival: "페스티벌", event: "행사", musical: "뮤지컬", etc: "기타",
   };
   // 종류별 기본값: 대기 시간(시간), 비용(원). 팬싸 비용은 null = 일정마다 직접 적기
-  // 사첵 기본값 0: 본공연 대기·티켓에 포함으로 본다
+  // 사첵: 본공연보다 2시간 30분 더 기다림, 비용은 본공연 티켓에 포함
   const DEF = {
-    wait: { concert: 2, overseas: 2, soundcheck: 0, fansign: 1, fanmeeting: 2, fanevent: 2, music: 4, campus: 3, festival: 3, event: 3, musical: 2, etc: 0 },
+    wait: { concert: 2, overseas: 2, soundcheck: 2.5, fansign: 1, fanmeeting: 2, fanevent: 2, music: 4, campus: 3, festival: 3, event: 3, musical: 2, etc: 0 },
     cost: { concert: 250000, overseas: 1000000, soundcheck: 0, fansign: null, fanmeeting: 70000, fanevent: 50000, music: 10000, campus: 10000, festival: 25000, event: 25000, musical: 150000, etc: 0 },
     album: 50000,
   };
