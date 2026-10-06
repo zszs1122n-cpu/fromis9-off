@@ -292,6 +292,7 @@ body { margin: 0; }
       <button type="button" class="stat stat-link" data-act="openSee" aria-controls="seeBox"><small>멤버 본 시간<span class="est">추정</span></small><b id="seeSum" class="won">–</b></button>
       <div class="stat"><small>총 쓴 돈<span class="est">추정</span><button type="button" class="eye" data-act="money"></button></small><b id="spentSum" class="won">–</b></div>
       <div class="stat"><small>평균 만족도</small><b id="rateAvg">–</b></div>
+      <div class="stat"><small>첫 오프</small><b id="first" style="font-size:14px">–</b></div>
       <div class="stat"><small>최근 오프</small><b id="last" style="font-size:14px">–</b></div>
     </div>
   </section>
@@ -759,9 +760,14 @@ body { margin: 0; }
     renderSee(evs);
     const rates = inYearAll.map((e) => Number(logOf(e.id).rating) || 0).filter(Boolean);
     $("rateAvg").textContent = rates.length ? "★ " + (rates.reduce((a, b) => a + b, 0) / rates.length).toFixed(1) : "–";
-    const last = inYearAll.filter((e) => e.d <= today).sort((a, b) => b.d.localeCompare(a.d))[0];
-    $("last").title = last ? last.t : "";
-    $("last").textContent = last ? `${last.d.slice(2).replaceAll("-", ".")} ${last.t.length > 10 ? last.t.slice(0, 10) + "…" : last.t}` : "–";
+    // 같은 날이면 사첵·미팬보다 본 일정을 첫·최근 오프로
+    const past = inYearAll.filter((e) => e.d <= today).sort((a, b) => a.d.localeCompare(b.d) || counts(b) - counts(a));
+    const showOff = (el, e) => {
+      $(el).title = e ? e.t : "";
+      $(el).textContent = e ? `${e.d.slice(2).replaceAll("-", ".")} ${e.t.length > 10 ? e.t.slice(0, 10) + "…" : e.t}` : "–";
+    };
+    showOff("first", past[0]);
+    showOff("last", past.length ? past.find((e) => e.d === past[past.length - 1].d) : null);
   }
 
   /* ---------- 목록 ---------- */
