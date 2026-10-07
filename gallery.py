@@ -205,7 +205,8 @@ def merge_events(events, additions, old):
         if matched:
             # 같은 날 낮공·밤공이 있으면 임의로 한 회차에 시간을 덮어쓰지 않는다.
             for existing in matched:
-                events[existing]["gu"] = event["gu"]
+                if event.get("gu"):
+                    events[existing]["gu"] = event["gu"]
                 if len(matched) == 1 and event.get("time"):
                     events[existing]["time"] = event["time"]
             # 다음에 캘린더가 채워져도 최초 갤러리 ID를 계속 사용한다.
