@@ -1,5 +1,5 @@
-# 매일 오전 9시(KST)에 캘린더에서 오프 일정을 다시 골라 docs/events.json을 갱신한다
-name: 캘린더 동기화
+# 매일 오전 9시(KST)에 영상 캘린더와 필굿의 갤러리 원문을 확인한다.
+name: 오프 일정 동기화
 
 on:
   schedule:
@@ -20,7 +20,10 @@ jobs:
       - name: 일정 가져오기
         env:
           OFF_OUT: docs/events.json
-        run: python sync.py
+        run: |
+          python -m pip install -r requirements.txt
+          python -m unittest -q test_gallery
+          python sync.py
       - name: 바뀐 일정 저장
         run: |
           git config user.name "github-actions[bot]"

@@ -1,4 +1,4 @@
-"""프로미스나인 영상 캘린더(ICS)에서 2022~2026년 '오프' 일정만 골라 events.json으로 저장한다.
+"""영상 캘린더(ICS)와 필굿의 최신 갤러리 원문에서 '오프' 일정을 골라 저장한다.
 캘린더에 없는 2017~2021년 일정은 history.py에서 합친다.
 
 사용법: python sync.py
@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from history import HISTORY, MUSIC_SHOWS
+from gallery import sync_gallery
 
 ICS_URL = (
     "https://calendar.google.com/calendar/ical/"
@@ -236,8 +237,20 @@ def group_music(events: dict, descs: dict):
 
 
 def main():
-    ics = fetch_ics()
-    events = {}
+    old_data = {}
+    if OUT.exists():
+        old_data = json.loads(OUT.read_text(encoding="utf-8"))
+    old = old_data.get("events", {})
+    now = datetime.now(KST).isoformat(timespec="seconds")
+    calendar = {"status": "ok", "checkedAt": now}
+    try:
+        ics = fetch_ics()
+        events = {}
+    except Exception as exc:
+        # 캘린더 장애여도 갤러리의 예정 일정을 확인할 수 있다.
+        ics = ""
+        events = {k: dict(e) for k, e in old.items() if e.get("source") != "gallery"}
+        calendar.update(status="failed", error=str(exc))
     seen = set()  # 캘린더에 아직 있는 모든 일정 id
     descs = {}    # 음방 설명란 (활동명 찾기용)
     for ev in parse(ics):
@@ -306,39 +319,40 @@ def main():
         events[k] = dict(e)
         seen.add(k)
 
-    old = {}
-    if OUT.exists():
-        try:
-            old = json.loads(OUT.read_text(encoding="utf-8")).get("events", {})
-        except Exception:
-            old = {}
+    gallery = sync_gallery(events, old, old_data.get("gallery"), classify=classify)
 
     added = [k for k in events if k not in old]
     changed = [k for k in events if k in old and old[k] != events[k]]
     removed = [k for k in old if k not in events]
     # 캘린더에서 아예 사라진 일정은 체크 기록이 있을 수 있으니 유지하고,
     # 캘린더에 남아 있지만 규칙상 오프가 아니게 된 일정만 목록에서 뺀다
-    kept = [k for k in removed if k not in seen]
-    dropped = [k for k in removed if k in seen]
+    kept = [k for k in removed if k not in seen and old[k].get("source") != "gallery"]
+    dropped = [k for k in removed if k not in kept]
     for k in kept:
         events[k] = old[k]
 
     ordered = dict(sorted(events.items(), key=lambda kv: (kv[1]["d"], kv[1]["t"])))
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(
-        json.dumps({"syncedAt": datetime.now(KST).isoformat(timespec="seconds"), "events": ordered},
+        json.dumps({"syncedAt": datetime.now(KST).isoformat(timespec="seconds"), "calendar": calendar, "gallery": gallery, "events": ordered},
                    ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
 
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     print(f"오프 일정 {len(events)}개 (새로 추가 {len(added)}, 변경 {len(changed)}, 제외 {len(dropped)}, 사라짐 {len(kept)})")
+    if calendar["status"] == "failed":
+        print(f"캘린더 확인 실패 (기존 일정 유지): {calendar['error']}")
+    if gallery["status"] == "ok":
+        print(f"갤러리 원문: 글 {gallery['number']} · {gallery['postedAt']} · {gallery['foundIn']}")
+    else:
+        print(f"갤러리 확인 실패 (기존 일정 유지): {gallery['error']}")
     for k in added:
         print(f"  + {events[k]['d']} [{events[k]['c']}] {events[k]['t']}")
     for k in changed:
         print(f"  ~ {events[k]['d']} [{events[k]['c']}] {events[k]['t']}")
     for k in dropped:
-        print(f"  x {old[k]['d']} {old[k]['t']} (오프 아님으로 제외)")
+        print(f"  x {old[k]['d']} {old[k]['t']} (최신 원문 또는 분류에 따라 제외)")
     for k in kept:
         print(f"  - {old[k]['d']} {old[k]['t']} (캘린더에서 사라짐, 목록에는 유지)")
 

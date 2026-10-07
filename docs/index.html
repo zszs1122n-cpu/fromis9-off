@@ -269,7 +269,7 @@ body { margin: 0; }
 <div class="wrap">
   <header class="top">
     <h1>프나 오프 일지 <span>☘</span></h1>
-    <div class="sync" id="sync">캘린더 불러오는 중…</div>
+    <div class="sync" id="sync">일정 불러오는 중…</div>
   </header>
   <p class="intro">로그인 없이 쓰는 프로미스나인 오프 기록장이에요. 체크와 메모는 이 기기의 브라우저에만 저장돼요.</p>
 
@@ -395,7 +395,7 @@ body { margin: 0; }
       <span id="backupInfo"></span>
     </div>
   </section>
-  <div class="src">일정 출처: 공개 구글 캘린더 <a href="https://calendar.google.com/calendar/embed?src=c04c6ea6c1d803550616182c4ef41f596fc5fbe4d5b51d2294b2003c3c14b1ce%40group.calendar.google.com&ctz=Asia%2FSeoul" target="_blank" rel="noopener">f9_video_calendar</a> · 오프로 볼 만한 일정만 자동으로 골랐어요. 오프가 아닌 건 '숨기기', 빠진 건 '+ 오프 추가'로 맞춰 주세요.</div>
+  <div class="src">일정 출처: 공개 구글 캘린더 <a href="https://calendar.google.com/calendar/embed?src=c04c6ea6c1d803550616182c4ef41f596fc5fbe4d5b51d2294b2003c3c14b1ce%40group.calendar.google.com&ctz=Asia%2FSeoul" target="_blank" rel="noopener">f9_video_calendar</a> · <a id="gallerySource" href="https://gall.dcinside.com/mgallery/board/lists/?id=fromis&exception_mode=recommend" target="_blank" rel="noopener">필굿 일정 원문</a> · 오프로 볼 만한 일정만 자동으로 골랐어요. 오프가 아닌 건 '숨기기', 빠진 건 '+ 오프 추가'로 맞춰 주세요.</div>
 </div>
 
 <script>
@@ -485,6 +485,8 @@ body { margin: 0; }
   let custom = {};      // 직접 추가한 일정
   let logs = {};        // 체크·메모 기록
   let syncedAt = null;
+  let gallerySync = null;
+  let calendarSync = null;
   let fs = {};          // 날짜 모르는 팬싸 횟수 {y2017 … y2026, unknown, cost, memo}
   let cfg = {};         // 바꾼 기본값 {wait: {cat: h}, see: {cat: 분}, cost: {cat: 원}, album: 원, count: {soundcheck|minifm: true}, since: 입덕일}
   const counts = (e) => !ADDON[e.c] || !!(cfg.count && cfg.count[e.c]);
@@ -527,7 +529,7 @@ body { margin: 0; }
         out.push({ id: id + "-sanok", d: e.sd || e.d, t: e.t.replace(/ 본방$/, "") + " 사녹", c: "sanok", u: e.u, src: "sanok", parent: id, o: 0 });
       }
       // 2024년 이후 콘서트(일본 공연 제외)는 '사운드체크' 항목을 하나 더 만든다
-      if (e.c === "concert" && e.d >= "2024" && !/tokyo|japan|osaka|도쿄|일본|오사카/i.test(e.t)) {
+      if (e.c === "concert" && e.sc !== false && e.d >= "2024" && !/tokyo|japan|osaka|도쿄|일본|오사카/i.test(e.t)) {
         out.push({ id: id + "-sc", d: e.d, t: e.t + " 사운드체크", c: "soundcheck", u: e.u, src: "sc", parent: id, o: 0 });
       }
     }
@@ -818,6 +820,7 @@ body { margin: 0; }
     const L = logOf(e.id);
     const done = !!L.done;
     const metaBits = [];
+    if (e.time) metaBits.push(`<span>시작 ${esc(e.time)}</span>`);
     if (L.wait) metaBits.push(`<span>⏱ 대기 ${esc(fmtHours(Number(L.wait)))}</span>`);
     if (L.see) metaBits.push(`<span>👀 ${esc(fmtMin(Number(L.see)))}</span>`);
     if (L.cost != null) metaBits.push(`<span>💸 ${money(Number(L.cost))}</span>`);
@@ -857,7 +860,8 @@ body { margin: 0; }
       <div class="field"><label for="memo-${esc(e.id)}">메모</label>
         <textarea id="memo-${esc(e.id)}" data-field="memo" maxlength="2000" placeholder="자리, 동행, 기억에 남는 순간, 다음엔 이렇게…">${esc(L.memo || "")}</textarea></div>
       <div class="actions">
-        ${e.u ? `<a href="${esc(e.u)}" target="_blank" rel="noopener">관련 링크 열기 ↗</a>` : '<span style="margin-right:auto"></span>'}
+        ${e.gu ? `<a href="${esc(e.gu)}" target="_blank" rel="noopener">일정 원문 ↗</a>` : ""}
+        ${e.u && e.u !== e.gu ? `<a href="${esc(e.u)}" target="_blank" rel="noopener">관련 링크 열기 ↗</a>` : e.gu ? "" : '<span style="margin-right:auto"></span>'}
         <span class="saved" id="saved-${esc(e.id)}"></span>
         ${e.src === "me"
           ? `<button type="button" class="btn danger" data-act="remove">이 일정 삭제</button>`
@@ -925,7 +929,14 @@ body { margin: 0; }
     if (!syncedAt) return;
     const d = new Date(syncedAt);
     const s = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
-    $("sync").textContent = `캘린더 갱신 ${s} · 매일 오전 9시`;
+    const source = gallerySync?.postedAt ? new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric" }).format(new Date(gallerySync.postedAt)) : "";
+    const gallery = gallerySync?.status === "failed"
+      ? ` · 갤러리 확인 실패${source ? ` (이전 ${source} 원문 유지)` : ""}`
+      : source ? ` · 갤러리 원문 ${source}` : "";
+    const calendar = calendarSync?.status === "failed" ? " · 캘린더 확인 실패 (기존 일정 유지)" : "";
+    $("sync").textContent = `일정 갱신 ${s} · 매일 오전 9시${gallery}${calendar}`;
+    $("sync").title = [gallerySync?.number ? `필굿 · 글 ${gallerySync.number} · ${gallerySync.postedAt}` : "", gallerySync?.error || "", calendarSync?.error || ""].filter(Boolean).join("\n");
+    if (gallerySync?.url) $("gallerySource").href = gallerySync.url;
   }
 
   function render() { renderList(); }
@@ -1246,11 +1257,13 @@ body { margin: 0; }
     .then((data) => {
       calEvents = (data && data.events) || {};
       syncedAt = data && data.syncedAt;
+      gallerySync = data && data.gallery;
+      calendarSync = data && data.calendar;
       loaded.cal = true;
       renderSync(); render();
     })
     .catch(() => {
-      $("sync").textContent = "캘린더 불러오기 실패";
+      $("sync").textContent = "일정 불러오기 실패";
       if (Object.keys(custom).length) { loaded.cal = true; render(); }
       else $("list").innerHTML = `<div class="empty"><b>오프 일정을 불러오지 못했어요</b><span>새로고침해 보세요. 그동안에도 '+ 오프 추가'로 직접 넣은 일정은 기록할 수 있어요.</span></div>`;
     });
