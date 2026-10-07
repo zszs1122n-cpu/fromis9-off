@@ -143,6 +143,16 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(current, old)
         self.assertEqual(meta['status'], 'failed')
 
+    def test_past_gallery_event_merges_when_video_calendar_catches_up(self):
+        event = {'d': '2026-10-01', 't': '아주대학교 축제', 'c': 'campus',
+                 'source': 'gallery', 'gu': POST['url']}
+        current = {'new-calendar-id': {'d': '2026-10-01', 't': '아주대학교 축제', 'c': 'campus'}}
+        with patch.object(gallery, 'find_latest', return_value=POST):
+            gallery.sync_gallery(current, {'original-id': event}, POST, NOW, classify=classify)
+        self.assertIn('original-id', current)
+        self.assertNotIn('new-calendar-id', current)
+        self.assertEqual(sum(e['d'] == '2026-10-01' for e in current.values()), 1)
+
     def test_night_post_counts_for_following_morning(self):
         html = post_html().replace('2026.10.06 00:07:31', '2026.10.05 23:30:00')
         post = gallery.read_post({'number': 1}, lambda _: html)

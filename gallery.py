@@ -241,7 +241,8 @@ def sync_gallery(events, old, previous=None, now=None, fetch=fetch_html, classif
                     if field in event:
                         events[key][field] = event[field]
     # 성공 시 최신 글에서 빠진 미래 갤러리 일정은 삭제, 지난 기록은 유지.
-    for key, event in old.items():
-        if event.get("source") == "gallery" and event["d"] < today:
-            events.setdefault(key, dict(event))
+    past = {key: dict(event) for key, event in old.items()
+            if event.get("source") == "gallery" and event["d"] < today}
+    # 공연이 지난 뒤 영상 캘린더에 올라와도 같은 ID로 합쳐 기록을 유지한다.
+    merge_events(events, past, old)
     return meta
