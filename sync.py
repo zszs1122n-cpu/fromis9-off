@@ -135,7 +135,7 @@ RULES = [
     ("festival", r"모모콘|GEE 드림 ?스테이지|Plant Our Planet|한미동맹|위문공연|위문열차|노사문화 ?콘서트|슈퍼히어로 ?콘서트|K-?POP ?(콘서트|CONCERT)|특집 ?콘서트"),
     ("concert", r"콘서트|앵콜콘|TOUR|월드투어|[Cc]oncert"),
     ("music", r"^\s*(쇼!\s*)?(뮤직뱅크|음악중심|인기가요|엠카운트다운|더쇼|쇼 ?챔피언)"),
-    ("campus", r"대학교?.*축제|입실렌티|성균관대|과학기술원|사관학교|카이스트|KAIST|대학 축제|SPRING BREEZE in CAMPUS"),
+    ("campus", r"대학교?.*(?:축제|가요제)|입실렌티|성균관대|과학기술원|사관학교|카이스트|KAIST|대학 축제|SPRING BREEZE in CAMPUS"),
     ("musical", r"뮤지컬"),
     ("festival", r"페스티벌|페스타|FESTA|[Ff]estival|FESTIVAL|워터밤|Waterbomb|워터 ?뮤직|풀파티|"
                  r"K-PULSE|KWAVE|SUPERPOP|THE SHINE|AKMF|PASSTIVAL|축제|문화제|드론제전|"
